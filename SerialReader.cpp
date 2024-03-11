@@ -30,6 +30,8 @@ SerialReader::SerialReader(const QSerialPortInfo& port, int baudRate, QObject *p
         qWarning() << "Couldn't open serial port " << port.portName();
     }
 
+    std::cout.flush();
+
 }
 
 void SerialReader::send(uint64_t address, const void *data, size_t size_bytes)

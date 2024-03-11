@@ -1,6 +1,7 @@
 #include <QCoreApplication>
-#include <QDebug>
 #include <iostream>
+
+#define DEBUG_SERIAL false
 
 #include "SerialReader.h"
 
@@ -12,6 +13,7 @@ int main(int argc, char *argv[])
 
     QSerialPortInfo targetPort;
 
+#if DEBUG_SERIAL
     std::cout << "Available baud rates: \n";
     for(auto &baudRate : QSerialPortInfo::standardBaudRates())
     {
@@ -19,22 +21,29 @@ int main(int argc, char *argv[])
     }
 
     std::cout << "\nFound serial ports: \n";
+#endif
+
     for (auto &port: serialPorts)
     {
+#if DEBUG_SERIAL
+
         std::cout << "\n" << port.portName().toStdString() << "\n";
         std::cout << "\tManufacturer: " << port.manufacturer().toStdString() << "\n";
         std::cout << "\tSystem location: " << port.systemLocation().toStdString() << "\n";
         std::cout << "\tSerial number: " << port.serialNumber().toStdString() << "\n";
+#endif
 
-        if (!port.portName().startsWith("tty") || port.portName().contains("Bluetooth"))
-            continue;
+        if (port.portName().startsWith("tty") && port.manufacturer() == "Digi")
+            targetPort = port;
     }
 
     std::cout.flush();
 
+    SerialReader serialReader(targetPort, 921600);
 
+    QString str = "Hello, World!";
 
-    SerialReader serialReader(serialPorts.at(1), 9600);
+    serialReader.send(0x0013A200423F474C, str.toUtf8(), str.length());
 
 
 //    SerialReader reader();

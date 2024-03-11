@@ -15,12 +15,10 @@ class SerialReader: public QObject
 
 public:
     SerialReader(const QSerialPortInfo& port, int baudRate, QObject *parent = nullptr);
+    void send(uint64_t address, const void *data, size_t size_bytes);
 
 private:
-    int m_baudRate;
     QSerialPort *m_serialPort;
-    QSerialPortInfo portInfo;
-
     void connectSignals();
 
 public slots:

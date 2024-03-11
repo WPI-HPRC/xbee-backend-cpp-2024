@@ -4,10 +4,11 @@
 
 #define connectHelper(method_signature) connect(m_serialPort, SIGNAL(method_signature), this, SLOT(method_signature))
 
-
+#include <iostream>
+#include <iomanip>
 #include "SerialReader.h"
 
-SerialReader::SerialReader(const QSerialPortInfo& port, int baudRate, QObject *parent): QObject(parent), portInfo(port), m_baudRate(baudRate)
+SerialReader::SerialReader(const QSerialPortInfo& port, int baudRate, QObject *parent): QObject(parent)
 {
     m_serialPort = new QSerialPort();
 
@@ -20,13 +21,61 @@ SerialReader::SerialReader(const QSerialPortInfo& port, int baudRate, QObject *p
 
     if(m_serialPort->open(QIODevice::ReadWrite))
     {
-        qDebug() << "Opened serial port " << portInfo.portName() << " with manufacturer " << portInfo.manufacturer();
+        std::cout << "Opened serial port " << port.manufacturer().toStdString() << " - " << port.portName().toStdString() << " at baud rate " << baudRate << "\n";
         connectSignals();
     }
     else
     {
-        qDebug() << "Couldn't open serial port " << portInfo.portName();
+        qWarning() << "Couldn't open serial port " << port.portName();
     }
+}
+
+void SerialReader::send(uint64_t address, const void *data, size_t size_bytes)
+{
+    size_t contentLength = size_bytes + 14; // +4 for start delimiter, length, and checksum, +8 for address
+
+    auto *packet = (uint8_t*)alloca(contentLength);
+
+    size_t index = 0;
+
+    packet[index++] = 0x7E; // Start delimiter
+
+    packet[index++] = (contentLength >> 8) & 0xFF; // Length high byte
+    packet[index++] = contentLength & 0xFF;        // Length low byte
+
+    packet[index++] = 0x10; // Frame type
+    packet[index++] = 0x01; // Frame ID
+
+    for (int i = 0; i < 8; i++)
+    {
+        packet[index++] = (address >> ((7 - i) * 8)) & 0xFF;
+    }
+
+    packet[index++] = 0xFF; // Reserved
+    packet[index++] = 0xFE; // Reserved
+
+    packet[index++] = 0x00; // Broadcast radius
+
+    packet[index++] = 0x00; // Options byte
+
+    memcpy(&packet[index++], data, size_bytes);
+
+    index += size_bytes - 1; // Subtract 1 from packet index to start checksum byte at the last index of packet
+
+    size_t checksum_temp = 0;
+
+    for (size_t i = 3; i < index; i++)
+    {
+        checksum_temp += packet[i];
+    }
+
+    uint8_t checksum = checksum_temp & 0xFF;
+
+    checksum = 0xFF - checksum;
+
+    packet[index++] = checksum;
+    
+    m_serialPort->write(QByteArray::fromRawData((const char*)packet, (long long)contentLength));
 }
 
 void SerialReader::connectSignals()

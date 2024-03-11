@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
         std::cout << "\tSerial number: " << port.serialNumber().toStdString() << "\n";
 #endif
 
-        if (port.portName().startsWith("tty") && port.manufacturer() == "Digi")
+        if (port.portName().startsWith("tty") && port.manufacturer().contains("Digi"))
             targetPort = port;
     }
 

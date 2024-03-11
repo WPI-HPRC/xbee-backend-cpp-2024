@@ -1,7 +1,7 @@
 #include <QCoreApplication>
 #include <iostream>
 
-#define DEBUG_SERIAL false
+#define DEBUG_SERIAL true
 
 #include "SerialReader.h"
 
@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
         std::cout << "\tSerial number: " << port.serialNumber().toStdString() << "\n";
 #endif
 
-        if (port.portName().startsWith("tty") && port.manufacturer().contains("Digi"))
+        if (!port.portName().contains("cu.") && port.manufacturer().contains("Digi"))
             targetPort = port;
     }
 

@@ -37,7 +37,11 @@ int main(int argc, char *argv[])
             targetPort = port;
     }
 
-    std::cout.flush();
+    if(targetPort.isNull())
+    {
+        qDebug("Couldn't find radio module");
+        return 1;
+    }
 
     SerialReader serialReader(targetPort, 921600);
 

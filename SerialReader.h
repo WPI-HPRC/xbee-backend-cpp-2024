@@ -5,6 +5,8 @@
 #ifndef XBEE_BACKEND_CPP_SERIALREADER_H
 #define XBEE_BACKEND_CPP_SERIALREADER_H
 
+#define MAX_PACKET_LENGTH 256
+
 #include <QObject>
 #include <QtSerialPort//QtSerialPort>
 
@@ -19,7 +21,11 @@ public:
 
 private:
     QSerialPort *m_serialPort;
+    char *receivePacket;
+    uint8_t *sendPacket;
+
     void connectSignals();
+    void receive(const uint8_t *packet);
 
 public slots:
     void    baudRateChanged(qint32 baudRate, QSerialPort::Directions directions);

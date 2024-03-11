@@ -5,7 +5,6 @@
 #define connectHelper(method_signature) connect(m_serialPort, SIGNAL(method_signature), this, SLOT(method_signature))
 
 #include <iostream>
-#include <iomanip>
 #include "SerialReader.h"
 
 SerialReader::SerialReader(const QSerialPortInfo& port, int baudRate, QObject *parent): QObject(parent)
@@ -22,19 +21,22 @@ SerialReader::SerialReader(const QSerialPortInfo& port, int baudRate, QObject *p
     if(m_serialPort->open(QIODevice::ReadWrite))
     {
         std::cout << "Opened serial port " << port.manufacturer().toStdString() << " - " << port.portName().toStdString() << " at baud rate " << baudRate << "\n";
+        receivePacket = new char[MAX_PACKET_LENGTH];
+        sendPacket = new uint8_t[MAX_PACKET_LENGTH];
         connectSignals();
     }
     else
     {
         qWarning() << "Couldn't open serial port " << port.portName();
     }
+
 }
 
 void SerialReader::send(uint64_t address, const void *data, size_t size_bytes)
 {
     size_t contentLength = size_bytes + 14; // +4 for start delimiter, length, and checksum, +8 for address
 
-    auto *packet = (uint8_t*)alloca(contentLength);
+    auto *packet = sendPacket;
 
     size_t index = 0;
 
@@ -60,8 +62,6 @@ void SerialReader::send(uint64_t address, const void *data, size_t size_bytes)
 
     memcpy(&packet[index++], data, size_bytes);
 
-    index += size_bytes - 1; // Subtract 1 from packet index to start checksum byte at the last index of packet
-
     size_t checksum_temp = 0;
 
     for (size_t i = 3; i < index; i++)
@@ -73,14 +73,14 @@ void SerialReader::send(uint64_t address, const void *data, size_t size_bytes)
 
     checksum = 0xFF - checksum;
 
-    packet[index++] = checksum;
-    
+    packet[contentLength - 1] = checksum;
+
     m_serialPort->write(QByteArray::fromRawData((const char*)packet, (long long)contentLength));
 }
 
 void SerialReader::connectSignals()
 {
-    connectHelper(baudRateChanged(qint32, QSerialPort::Directions));
+    connectHelper(baudRateChanged(qint32,QSerialPort::Directions));
     connectHelper(breakEnabledChanged(bool));
     connectHelper(dataBitsChanged(QSerialPort::DataBits));
     connectHelper(dataTerminalReadyChanged(bool));
@@ -91,12 +91,16 @@ void SerialReader::connectSignals()
     connectHelper(stopBitsChanged(QSerialPort::StopBits));
     connectHelper(aboutToClose());
     connectHelper(bytesWritten(qint64));
-    connectHelper(channelBytesWritten(int, qint64));
+    connectHelper(channelBytesWritten(int,qint64));
     connectHelper(channelReadyRead(int));
     connectHelper(readChannelFinished());
     connectHelper(readyRead());
 }
 
+void SerialReader::receive(const uint8_t *packet)
+{
+
+}
 
 void    SerialReader::baudRateChanged(qint32 baudRate, QSerialPort::Directions directions)
 {
@@ -164,5 +168,8 @@ void	SerialReader::readChannelFinished()
 void	SerialReader::readyRead()
 {
     qDebug() << "Ready read";
+
+    m_serialPort->read(receivePacket, MAX_PACKET_LENGTH);
+
 }
 

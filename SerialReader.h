@@ -5,11 +5,10 @@
 #ifndef XBEE_BACKEND_CPP_SERIALREADER_H
 #define XBEE_BACKEND_CPP_SERIALREADER_H
 
-#define MAX_PACKET_LENGTH 256
-
 #include <QObject>
 #include <QtSerialPort//QtSerialPort>
 
+#include "XBeeDevice.h"
 
 class SerialReader: public QObject
 {
@@ -17,33 +16,30 @@ class SerialReader: public QObject
 
 public:
     SerialReader(const QSerialPortInfo& port, int baudRate, QObject *parent = nullptr);
-    void send(uint64_t address, const void *data, size_t size_bytes);
+    XBeeDevice *radioModule;
 
 private:
     QSerialPort *m_serialPort;
-    char *receivePacket;
-    uint8_t *sendPacket;
-
     void connectSignals();
-    void receive(const uint8_t *packet);
 
 public slots:
-    void    baudRateChanged(qint32 baudRate, QSerialPort::Directions directions);
-    void	breakEnabledChanged(bool set);
-    void	dataBitsChanged(QSerialPort::DataBits dataBits);
-    void	dataTerminalReadyChanged(bool set);
-    void	errorOccurred(QSerialPort::SerialPortError error);
-    void	flowControlChanged(QSerialPort::FlowControl flow);
-    void	parityChanged(QSerialPort::Parity parity);
-    void	requestToSendChanged(bool set);
-    void	stopBitsChanged(QSerialPort::StopBits stopBits);
+    void readyRead();
 
-    void	aboutToClose();
-    void	bytesWritten(qint64 bytes);
-    void	channelBytesWritten(int channel, qint64 bytes);
-    void	channelReadyRead(int channel);
-    void	readChannelFinished();
-    void	readyRead();
+    static void baudRateChanged(qint32 baudRate, QSerialPort::Directions directions);
+    static void	breakEnabledChanged(bool set);
+    static void	dataBitsChanged(QSerialPort::DataBits dataBits);
+    static void	dataTerminalReadyChanged(bool set);
+    static void	errorOccurred(QSerialPort::SerialPortError error);
+    static void	flowControlChanged(QSerialPort::FlowControl flow);
+    static void	parityChanged(QSerialPort::Parity parity);
+    static void	requestToSendChanged(bool set);
+    static void	stopBitsChanged(QSerialPort::StopBits stopBits);
+
+    static void	aboutToClose();
+    static void	bytesWritten(qint64 bytes);
+    static void	channelBytesWritten(int channel, qint64 bytes);
+    static void	channelReadyRead(int channel);
+    static void	readChannelFinished();
 
 };
 

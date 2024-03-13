@@ -5,23 +5,28 @@
 #include "WebServer.h"
 #include <iostream>
 
+#define DEBUG false
+
 #define connectHelper(method_signature) connect(&server, SIGNAL(method_signature), this, SLOT(method_signature))
 
 WebServer::WebServer(int port, QObject *parent): QObject(parent), port(port),
-                                                 server("Telemetry Server",
+                                                 server("Local Server",
                                                         QWebSocketServer::NonSecureMode)
 {
     server.listen(QHostAddress::LocalHost, port);
 
-    std::cout << "Started telemetry server on " << server.serverAddress().toString().toStdString() << ":"
+    std::cout << "Started local server on " << server.serverAddress().toString().toStdString() << ":"
               << server.serverPort() << std::endl;
 
+#if DEBUG
     connectHelper(acceptError(QAbstractSocket::SocketError));
     connectHelper(alertReceived(QSsl::AlertLevel, QSsl::AlertType, const QString));
     connectHelper(alertSent(QSsl::AlertLevel, QSsl::AlertType, const QString));
     connectHelper(closed());
-    connectHelper(newConnection());
     connectHelper(serverError(QWebSocketProtocol::CloseCode));
+#endif
+
+    connectHelper(newConnection());
 }
 
 void WebServer::acceptError(QAbstractSocket::SocketError socketError)

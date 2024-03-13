@@ -7,6 +7,8 @@
 #include <iostream>
 #include "SerialReader.h"
 
+#define DEBUG true
+
 SerialReader::SerialReader(const QSerialPortInfo& port, int baudRate, QObject *parent): QObject(parent)
 {
     m_serialPort = new QSerialPort();
@@ -37,6 +39,7 @@ SerialReader::SerialReader(const QSerialPortInfo& port, int baudRate, QObject *p
 
 void SerialReader::connectSignals()
 {
+#if DEBUG
     connectHelper(baudRateChanged(qint32,QSerialPort::Directions));
     connectHelper(breakEnabledChanged(bool));
     connectHelper(dataBitsChanged(QSerialPort::DataBits));
@@ -46,6 +49,7 @@ void SerialReader::connectSignals()
     connectHelper(parityChanged(QSerialPort::Parity));
     connectHelper(requestToSendChanged(bool));
     connectHelper(stopBitsChanged(QSerialPort::StopBits));
+#endif
     connectHelper(aboutToClose());
     connectHelper(bytesWritten(qint64));
     connectHelper(channelBytesWritten(int,qint64));
@@ -94,32 +98,44 @@ void	SerialReader::stopBitsChanged(QSerialPort::StopBits stopBits)
 
 void	SerialReader::aboutToClose()
 {
+#if DEBUG
     qDebug() << "About to close";
+#endif
 }
 
 void	SerialReader::bytesWritten(qint64 bytes)
 {
+#if DEBUG
     qDebug() << "Bytes written: " << bytes;
+#endif
 }
 
 void	SerialReader::channelBytesWritten(int channel, qint64 bytes)
 {
+#if DEBUG
     qDebug() << "Channel bytes written. Channel: " << channel << ", bytes: " << bytes;
+#endif
 }
 
 void	SerialReader::channelReadyRead(int channel)
 {
+#if DEBUG
     qDebug() << "Channel ready read: " << channel;
+#endif
 }
 
 void	SerialReader::readChannelFinished()
 {
+#if DEBUG
     qDebug() << "Read channel finished";
+#endif
 }
 
 void	SerialReader::readyRead()
 {
+#if DEBUG
     qDebug() << "Ready read";
+#endif
 
     radioModule->receive();
 }

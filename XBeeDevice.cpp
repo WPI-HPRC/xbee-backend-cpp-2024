@@ -5,6 +5,8 @@
 #include "XBeeDevice.h"
 #include "QDebug"
 
+#define DEBUG true
+
 XBeeDevice::XBeeDevice(QSerialPort *serialPort, QObject *parent): QObject(parent), m_serialPort(serialPort)
 {
     receivePacket = new char[MAX_PACKET_LENGTH];
@@ -71,14 +73,24 @@ void XBeeDevice::_receive(const uint8_t *packet)
 {
     size_t index = 0;
 
+#if !DEBUG
     if(packet[index++] != 0x7E)
     {
         qDebug() << "Wrong start delimiter: " << Qt::hex << packet[index];
         return;
     }
+#endif
 
     uint8_t lengthLow = packet[index++];
     uint8_t lengthHigh = packet[index++];
+
+#if DEBUG
+    qDebug("Packet received: ");
+    for (int i = 0; i < (lengthHigh + PACKET_HEADER_LENGTH); i++)
+    {
+        qDebug() << packet[i];
+    }
+#endif
 
     uint8_t frameType = packet[index++];
     uint8_t frameID = packet[index++];
@@ -104,7 +116,7 @@ void XBeeDevice::_receive(const uint8_t *packet)
         return;
     }
 
-    handleData(&packet[PACKET_HEADER_LENGTH], lengthHigh);
+    emit dataReady(&packet[PACKET_HEADER_LENGTH], lengthHigh);
 }
 
 void XBeeDevice::receive()

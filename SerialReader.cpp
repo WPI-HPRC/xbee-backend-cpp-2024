@@ -7,7 +7,7 @@
 #include <iostream>
 #include "SerialReader.h"
 
-#define DEBUG true
+#define DEBUG false
 
 SerialReader::SerialReader(const QSerialPortInfo& port, int baudRate, QObject *parent): QObject(parent)
 {

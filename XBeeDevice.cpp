@@ -61,66 +61,90 @@ void XBeeDevice::send(uint64_t address, const void *data, size_t size_bytes)
     m_serialPort->write(QByteArray::fromRawData((const char*)packet, (long long)contentLength));
 }
 
-void XBeeDevice::handleData(const uint8_t *data, size_t length_bytes)
-{
-    // For now, assume telemetry packet from the rocket
-
-    memcpy(telemPacket, data, length_bytes);
-
-}
-
 void XBeeDevice::_receive(const uint8_t *packet)
 {
-    size_t index = 0;
-
-#if !DEBUG
-    if(packet[index++] != 0x7E)
-    {
-        qDebug() << "Wrong start delimiter: " << Qt::hex << packet[index];
-        return;
-    }
-#endif
+    size_t index = 1;
 
     uint8_t lengthLow = packet[index++];
     uint8_t lengthHigh = packet[index++];
 
-#if DEBUG
-    qDebug("Packet received: ");
-    for (int i = 0; i < (lengthHigh + PACKET_HEADER_LENGTH); i++)
-    {
-        qDebug() << packet[i];
-    }
-#endif
+    uint8_t payloadLength = lengthHigh - 12;
 
     uint8_t frameType = packet[index++];
-    uint8_t frameID = packet[index++];
 
-    index += 12; // Skip address, reserved, broadcast radius, and options bytes
+    uint64_t addr = 0;
 
-//    uint8_t dataType = packet[index++];
-
-    index += lengthHigh;
-
-    uint64_t checksum_temp = 0;
-
-    for (int i = 3; i < index; i++)
+#if DEBUG
+    QByteArray addrArray;
+    for (int i = 0; i < 8; i++)
     {
-        checksum_temp += packet[i];
+        addrArray.append((char) packet[index + i]);
+    }
+    qDebug() << "Received message from: " << Qt::hex << addrArray.toHex();
+
+#endif
+
+    for (int i = 0; i < 8; i++)
+    {
+        addr = addr & (packet[index++] << 8 * i);
     }
 
-    uint8_t checksum = checksum_temp & 0xFF;
+    // Skip reserved bytes
+    index += 2;
+
+    uint8_t receiveOptions = packet[index++];
+
+    memcpy(telemPacket, &packet[index], payloadLength);
+
+    index += payloadLength;
+
+    uint8_t checksum_temp = 0;
+
+    QByteArray checksumBits;
+    for (int i = 0; i < lengthHigh; i++)
+    {
+        checksum_temp += packet[i + 3];
+        checksumBits.append((char)packet[i + 3]);
+    }
+
+    uint8_t checksum = 0xFF - checksum_temp;
 
     if(checksum != packet[index])
     {
-        qDebug() << "Checksums do not match. Calculated: " << checksum << ", received: " << packet[index];
+#if DEBUG
+        qDebug() << "Checksums do not match. Calculated: " << Qt::hex << checksum << "Received: " << packet[index];
+        qDebug() << "Packet received: " << QByteArray::fromRawData(receivePacket, lengthHigh + 4).toHex();
+        qDebug() << "Checksum bits: " << checksumBits.toHex();
+#endif
         return;
     }
 
-    emit dataReady(&packet[PACKET_HEADER_LENGTH], lengthHigh);
+    emit dataReady(&packet[15], payloadLength);
 }
 
 void XBeeDevice::receive()
 {
-    m_serialPort->read(receivePacket, MAX_PACKET_LENGTH);
+    if(isProcessingPacket)
+        return;
+    isProcessingPacket = true;
+
+    m_serialPort->read(receivePacket, 1);
+
+    // Check for start delimiter
+    if(receivePacket[0] != 0x7E)
+    {
+        isProcessingPacket = false;
+        return;
+    }
+
+    // Read the length of the packet (16 bits = 2 bytes) and place it directly after the start delimiter in our receive memory
+    m_serialPort->read(&receivePacket[1], 2);
+
+    // Read the rest of the packet. The length represents the number of bytes between the length and the checksum.
+    // The second of the two length bytes holds the real length of the packet.
+    m_serialPort->read(&receivePacket[3], receivePacket[2] + 1);
+
+    isProcessingPacket = false;
+
     _receive((const uint8_t*)receivePacket);
 }

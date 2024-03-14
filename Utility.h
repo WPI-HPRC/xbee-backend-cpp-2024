@@ -5,6 +5,8 @@
 #ifndef XBEE_BACKEND_CPP_UTILITY_H
 #define XBEE_BACKEND_CPP_UTILITY_H
 
+#include "json_struct.h"
+
 #pragma pack(push,1)
 struct TelemPacket {
     // State Integer
@@ -53,6 +55,39 @@ struct TelemPacket {
     bool gpsLock = false;
 
     uint32_t timestamp = 0;
+
+    JS_OBJ(
+            state,
+            accelX,
+            accelY,
+            accelZ,
+            gyroX,
+            gyroY,
+            gyroZ,
+            magX,
+            magY,
+            magZ,
+            pressure,
+            altitude,
+            w,
+            i,
+            j,
+            k,
+            posX,
+            posY,
+            posZ,
+            velX,
+            velY,
+            velZ,
+            gpsLat,
+            gpsLong,
+            gpsAltMSL,
+            gpsAltAGL,
+            epochTime,
+            satellites,
+            gpsLock,
+            timestamp
+            );
 };
 #pragma pack(pop)
 

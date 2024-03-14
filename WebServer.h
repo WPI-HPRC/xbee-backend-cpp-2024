@@ -55,6 +55,8 @@ public slots:
 
     void dataReady(const uint8_t *data, size_t length_bytes);
 
+    void broadcast(const QString &str);
+
     void clientStateChanged(WebSocket *socket, const QAbstractSocket::SocketState &state);
 
 

@@ -3,6 +3,7 @@
 //
 
 #include "Backend.h"
+#include "DataSimulator.h"
 #include <iostream>
 
 #define DEBUG_SERIAL false
@@ -43,6 +44,10 @@ QSerialPortInfo getTargetPort()
 
 Backend::Backend(QObject *parent): QObject(parent)
 {
+    webServer = new WebServer(8001);
+
+//    dataSimulator = new DataSimulator("/Users/will/Documents/GitHub/HPRC/telemetry-server/logs/2024-02-24_18.02.19_telemetry.csv", 25, webServer);
+//    return;
     QSerialPortInfo targetPort = getTargetPort();
 
     if(targetPort.isNull())
@@ -52,7 +57,6 @@ Backend::Backend(QObject *parent): QObject(parent)
     }
 
     serialReader = new SerialReader(targetPort, 921600);
-    webServer = new WebServer(8001);
 
     connect(serialReader->radioModule, SIGNAL(dataReady(const uint8_t *, size_t)), webServer, SLOT(dataReady(const uint8_t *, size_t)));
 }

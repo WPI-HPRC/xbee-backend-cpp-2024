@@ -9,6 +9,7 @@
 
 #include "SerialReader.h"
 #include "WebServer.h"
+#include "DataSimulator.h"
 
 class Backend: public QObject
 {
@@ -18,6 +19,10 @@ public:
 private:
     SerialReader *serialReader;
     WebServer *webServer;
+    DataSimulator *dataSimulator;
+
+public slots:
+    void run();
 
 };
 

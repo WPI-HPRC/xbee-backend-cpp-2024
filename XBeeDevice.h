@@ -22,6 +22,8 @@ public:
     void send(uint64_t address, const void *data, size_t size_bytes);
 
 private:
+    bool isProcessingPacket;
+
     QSerialPort *m_serialPort;
 
     uint8_t *sendPacket;
@@ -30,7 +32,6 @@ private:
     TelemPacket *telemPacket;
 
     void _receive(const uint8_t *packet);
-    void handleData(const uint8_t *data, size_t length_bytes);
 
 signals:
     void dataReady(const uint8_t *data, size_t length_bytes);

@@ -3,6 +3,7 @@
 //
 
 #include "WebServer.h"
+#include "Utility.h"
 #include <iostream>
 
 #define DEBUG false
@@ -89,8 +90,22 @@ void WebServer::clientStateChanged(WebSocket *socket, const QAbstractSocket::Soc
 
 void WebServer::dataReady(const uint8_t *data, size_t length_bytes)
 {
+    auto *thePacket = (TelemPacket *)(data);
+
+    std::string json = JS::serializeStruct(*thePacket);
+
+    qDebug() << json;
+
     for (auto socket : clients)
     {
-        socket->socket->sendTextMessage("Data!!");
+        socket->socket->sendTextMessage(QString::fromUtf8(json.c_str()));
+    }
+}
+
+void WebServer::broadcast(const QString &str)
+{
+    for (WebSocket *client : clients)
+    {
+        client->socket->sendTextMessage(str);
     }
 }

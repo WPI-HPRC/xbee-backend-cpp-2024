@@ -22,7 +22,10 @@ add_executable(xbee_backend_cpp main.cpp
         WebServer.cpp
         WebServer.h
         Backend.cpp
-        Backend.h)
+        Backend.h
+        DataSimulator.cpp
+        DataSimulator.h
+        json_struct.h)
 target_link_libraries(xbee_backend_cpp
         Qt::Core
         Qt6::SerialPort

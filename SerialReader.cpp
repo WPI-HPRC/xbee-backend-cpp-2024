@@ -7,7 +7,7 @@
 #include <iostream>
 #include "SerialReader.h"
 
-#define DEBUG false
+#define DEBUG true
 
 SerialReader::SerialReader(const QSerialPortInfo& port, int baudRate, QObject *parent): QObject(parent)
 {
@@ -134,7 +134,7 @@ void	SerialReader::readChannelFinished()
 void	SerialReader::readyRead()
 {
 #if DEBUG
-    qDebug() << "Ready read";
+//    qDebug() << "Ready read: " << QDateTime::currentDateTime();
 #endif
 
     radioModule->receive();

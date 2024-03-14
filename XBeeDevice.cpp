@@ -5,7 +5,8 @@
 #include "XBeeDevice.h"
 #include "QDebug"
 
-#define DEBUG true
+#define DEBUG false
+
 
 XBeeDevice::XBeeDevice(QSerialPort *serialPort, QObject *parent): QObject(parent), m_serialPort(serialPort)
 {
@@ -116,8 +117,10 @@ void XBeeDevice::_receive(const uint8_t *packet)
         qDebug() << "Packet received: " << QByteArray::fromRawData(receivePacket, lengthHigh + 4).toHex();
         qDebug() << "Checksum bits: " << checksumBits.toHex();
 #endif
-        return;
+//        return;
     }
+
+//    qDebug() << "Received packet: " << ((TelemPacket *)(&packet[15]))->timestamp;
 
     emit dataReady(&packet[15], payloadLength);
 }
@@ -125,7 +128,10 @@ void XBeeDevice::_receive(const uint8_t *packet)
 void XBeeDevice::receive()
 {
     if(isProcessingPacket)
+    {
+        qDebug("Already receiving");
         return;
+    }
     isProcessingPacket = true;
 
     m_serialPort->read(receivePacket, 1);

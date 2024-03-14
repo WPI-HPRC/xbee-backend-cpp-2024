@@ -7,6 +7,7 @@
 
 #include <QObject>
 #include <QtWebSockets/QtWebSockets>
+#include "DataLogger.h"
 
 class WebSocket: public QObject
 {
@@ -39,6 +40,7 @@ public:
 private:
     QWebSocketServer server;
     QList<WebSocket *>clients;
+    DataLogger dataLogger;
 
 public slots:
     void acceptError(QAbstractSocket::SocketError socketError);

@@ -94,11 +94,11 @@ void WebServer::dataReady(const uint8_t *data, size_t length_bytes)
 
     std::string json = JS::serializeStruct(*thePacket);
 
-    qDebug() << json;
+    dataLogger.dataReady(json.c_str());
 
     for (auto socket : clients)
     {
-        socket->socket->sendTextMessage(QString::fromUtf8(json.c_str()));
+        socket->socket->sendTextMessage(json.c_str());
     }
 }
 

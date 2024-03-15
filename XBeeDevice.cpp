@@ -8,6 +8,18 @@
 
 #define DEBUG true
 
+uint8_t calcChecksum(const uint8_t *packet, size_t size_bytes)
+{
+    uint8_t sum = 0;
+
+    for (size_t i = 0; i < size_bytes; i++)
+    {
+        sum += packet[3 + i]; // Skip start delimiter and length bytes
+    }
+
+    return 0xFF - sum;
+}
+
 XBeeDevice::XBeeDevice(QSerialPort *serialPort, QObject *parent): QObject(parent), m_serialPort(serialPort)
 {
     receivePacket = new char[MAX_FRAME_LENGTH];
@@ -68,17 +80,7 @@ void XBeeDevice::sendTransmitRequestCommand(uint64_t address, const uint8_t *dat
 void XBeeDevice::sendFrame(uint8_t *packet, size_t size_bytes)
 {
     packet[0] = 0x7E; // Start delimiter;
-
-    uint8_t checksum = 0;
-
-    for (size_t i = 0; i < size_bytes; i++)
-    {
-        checksum += packet[3 + i]; // Skip start delimiter and length bytes
-    }
-
-    checksum = 0xFF - checksum;
-
-    packet[3 + size_bytes] = checksum;
+    packet[3 + size_bytes] = calcChecksum(packet, size_bytes);
 
 #if DEBUG
     qDebug() << QByteArray::fromRawData((const char *)packet, (long long)size_bytes + 4).toHex();
@@ -187,5 +189,4 @@ void XBeeDevice::receive()
     isProcessingPacket = false;
 
     _receive((const uint8_t*)receivePacket);
-//    receive();
 }

@@ -35,7 +35,7 @@ class WebServer: public QObject
 public:
     WebServer(int port, QObject *parent = nullptr);
     int port;
-//    void send(QStrin)
+//    void sendFrame(QStrin)
 
 private:
     QWebSocketServer server;

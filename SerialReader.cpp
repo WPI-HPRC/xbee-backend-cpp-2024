@@ -35,6 +35,9 @@ SerialReader::SerialReader(const QSerialPortInfo& port, int baudRate, QObject *p
 
     radioModule = new XBeeDevice(m_serialPort);
 
+    readTimer = new QTimer(this);
+//    connect(readTimer, SIGNAL(timeout()), this, SLOT(readyRead()));
+    readTimer->start(20);
 }
 
 void SerialReader::connectSignals()
@@ -55,7 +58,7 @@ void SerialReader::connectSignals()
     connectHelper(channelBytesWritten(int,qint64));
     connectHelper(channelReadyRead(int));
     connectHelper(readChannelFinished());
-    connectHelper(readyRead());
+//    connectHelper(readyRead());
 }
 
 void SerialReader::baudRateChanged(qint32 baudRate, QSerialPort::Directions directions)
@@ -89,7 +92,7 @@ void	SerialReader::parityChanged(QSerialPort::Parity parity)
 }
 void	SerialReader::requestToSendChanged(bool set)
 {
-    qDebug() << "Request to send changed to: " << (set ? "TRUE" : "FALSE");
+    qDebug() << "Request to sendFrame changed to: " << (set ? "TRUE" : "FALSE");
 }
 void	SerialReader::stopBitsChanged(QSerialPort::StopBits stopBits)
 {

@@ -9,9 +9,12 @@
 #include <QSerialPort>
 #include "Utility.h"
 
-#define PACKET_HEADER_LENGTH 17
-#define MAX_PAYLOAD_LENGTH 256
-#define MAX_PACKET_LENGTH (MAX_PAYLOAD_LENGTH + PACKET_HEADER_LENGTH)
+#define AT_COMMAND_BYTES 6 // +2 for length, +1 for frame type, +1 for frame ID, +2 for AT command
+#define TRANSMIT_REQUEST_EXTRA_BYTES 14 // +1 for frame type, +1 for frame ID, +8 for address, +2 for reserved, +1 for broadcast radius
+#define NODE_DISCOVERY_EXTRA_BYTES 0
+
+#define MAX_PACKET_LENGTH 256
+#define MAX_FRAME_LENGTH (MAX_PACKET_LENGTH + 4) // +1 for start delimiter, +2 for length, +1 for checksum
 
 class XBeeDevice: public QObject
 {
@@ -19,14 +22,20 @@ class XBeeDevice: public QObject
 public:
     explicit XBeeDevice(QSerialPort *serialPort, QObject *parent = nullptr);
     void receive();
-    void send(uint64_t address, const void *data, size_t size_bytes);
+    void sendFrame(uint8_t *packet, size_t size_bytes);
+    void sendTransmitRequestCommand(uint64_t address, const uint8_t *data, size_t size_bytes);
+    void sendNodeDiscoveryCommand();
 
 private:
     bool isProcessingPacket;
 
+    long long lastPacketMs;
+
     QSerialPort *m_serialPort;
 
-    uint8_t *sendPacket;
+    uint8_t *transmitRequestFrame;
+    uint8_t *nodeDiscoveryFrame;
+
     char *receivePacket;
 
     TelemPacket *telemPacket;

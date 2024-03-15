@@ -4,62 +4,87 @@
 
 #include "XBeeDevice.h"
 #include "QDebug"
+#include <QDateTime>
 
-#define DEBUG false
-
+#define DEBUG true
 
 XBeeDevice::XBeeDevice(QSerialPort *serialPort, QObject *parent): QObject(parent), m_serialPort(serialPort)
 {
-    receivePacket = new char[MAX_PACKET_LENGTH];
-    sendPacket = new uint8_t[MAX_PACKET_LENGTH];
+    receivePacket = new char[MAX_FRAME_LENGTH];
+
+    transmitRequestFrame = new uint8_t[MAX_FRAME_LENGTH];
+
+    nodeDiscoveryFrame = new uint8_t[MAX_FRAME_LENGTH];
 
     telemPacket = new TelemPacket;
 }
 
-void XBeeDevice::send(uint64_t address, const void *data, size_t size_bytes)
+void XBeeDevice::sendNodeDiscoveryCommand()
 {
-    size_t contentLength = size_bytes + 14; // +4 for start delimiter, length, and checksum, +8 for address
+    size_t index = 1;
+    size_t contentLength_bytes = AT_COMMAND_BYTES + NODE_DISCOVERY_EXTRA_BYTES;
 
-    auto *packet = sendPacket;
+    nodeDiscoveryFrame[index++] = (contentLength_bytes >> 8) & 0xFF;
+    nodeDiscoveryFrame[index++] = contentLength_bytes & 0xFF;
 
-    size_t index = 0;
+    nodeDiscoveryFrame[index++] = 0x08; // Local AT Command Request
+    nodeDiscoveryFrame[index++] = 0x01; // Frame ID
 
-    packet[index++] = 0x7E; // Start delimiter
+    // These two bits represent the actual AT command.
+    // "ND" = "Node Discovery"
+    nodeDiscoveryFrame[index++] = 'N';
+    nodeDiscoveryFrame[index++] = 'D';
 
-    packet[index++] = (contentLength >> 8) & 0xFF; // Length high byte
-    packet[index++] = contentLength & 0xFF;        // Length low byte
+    sendFrame(nodeDiscoveryFrame, contentLength_bytes);
+}
 
-    packet[index++] = 0x10; // Frame type
-    packet[index++] = 0x01; // Frame ID
+void XBeeDevice::sendTransmitRequestCommand(uint64_t address, const uint8_t *data, size_t size_bytes)
+{
+    size_t contentLength_bytes = size_bytes + TRANSMIT_REQUEST_EXTRA_BYTES;
+    size_t index = 1; // skip first byte (start delimiter)
+
+    transmitRequestFrame[index++] = (contentLength_bytes >> 8) & 0xFF;
+    transmitRequestFrame[index++] = contentLength_bytes & 0xFF;
+
+    transmitRequestFrame[index++] = 0x10; // Transmit Request
+    transmitRequestFrame[index++] = 0x01; // Frame ID
 
     for (int i = 0; i < 8; i++)
     {
-        packet[index++] = (address >> ((7 - i) * 8)) & 0xFF;
+        transmitRequestFrame[index++] = (address >> ((7 - i) * 8)) & 0xFF;
     }
 
-    packet[index++] = 0xFF; // Reserved
-    packet[index++] = 0xFE; // Reserved
+    transmitRequestFrame[index++] = 0xFF; // Reserved
+    transmitRequestFrame[index++] = 0xFE; // Reserved
 
-    packet[index++] = 0x00; // Broadcast radius
+    transmitRequestFrame[index++] = 0x00; // Broadcast radius
+    transmitRequestFrame[index++] = 0x00; // Transmit options. Use TO value (in parameters of the radio itself)
 
-    packet[index++] = 0x00; // Options byte
+    memcpy(&transmitRequestFrame[index], data, size_bytes);
 
-    memcpy(&packet[index++], data, size_bytes);
+    sendFrame(transmitRequestFrame, contentLength_bytes);
+}
 
-    size_t checksum_temp = 0;
+void XBeeDevice::sendFrame(uint8_t *packet, size_t size_bytes)
+{
+    packet[0] = 0x7E; // Start delimiter;
 
-    for (size_t i = 3; i < index; i++)
+    uint8_t checksum = 0;
+
+    for (size_t i = 0; i < size_bytes; i++)
     {
-        checksum_temp += packet[i];
+        checksum += packet[3 + i]; // Skip start delimiter and length bytes
     }
-
-    uint8_t checksum = checksum_temp & 0xFF;
 
     checksum = 0xFF - checksum;
 
-    packet[contentLength - 1] = checksum;
+    packet[3 + size_bytes] = checksum;
 
-    m_serialPort->write(QByteArray::fromRawData((const char*)packet, (long long)contentLength));
+#if DEBUG
+    qDebug() << QByteArray::fromRawData((const char *)packet, (long long)size_bytes + 4).toHex();
+#endif
+
+    m_serialPort->write((const char*)packet, (long long)size_bytes + 4);
 }
 
 void XBeeDevice::_receive(const uint8_t *packet)
@@ -101,11 +126,9 @@ void XBeeDevice::_receive(const uint8_t *packet)
 
     uint8_t checksum_temp = 0;
 
-    QByteArray checksumBits;
     for (int i = 0; i < lengthHigh; i++)
     {
         checksum_temp += packet[i + 3];
-        checksumBits.append((char)packet[i + 3]);
     }
 
     uint8_t checksum = 0xFF - checksum_temp;
@@ -113,6 +136,11 @@ void XBeeDevice::_receive(const uint8_t *packet)
     if(checksum != packet[index])
     {
 #if DEBUG
+        QByteArray checksumBits;
+        for (int i = 0; i < lengthHigh; i++)
+        {
+            checksumBits.append((char)packet[i + 3]);
+        }
         qDebug() << "Checksums do not match. Calculated: " << Qt::hex << checksum << "Received: " << packet[index];
         qDebug() << "Packet received: " << QByteArray::fromRawData(receivePacket, lengthHigh + 4).toHex();
         qDebug() << "Checksum bits: " << checksumBits.toHex();
@@ -132,6 +160,7 @@ void XBeeDevice::receive()
         qDebug("Already receiving");
         return;
     }
+
     isProcessingPacket = true;
 
     m_serialPort->read(receivePacket, 1);
@@ -143,6 +172,11 @@ void XBeeDevice::receive()
         return;
     }
 
+    long long currentMs = QDateTime::currentDateTime().currentMSecsSinceEpoch();
+    qDebug() << "Time between packets: " << currentMs - lastPacketMs;
+
+    lastPacketMs = currentMs;
+
     // Read the length of the packet (16 bits = 2 bytes) and place it directly after the start delimiter in our receive memory
     m_serialPort->read(&receivePacket[1], 2);
 
@@ -153,4 +187,5 @@ void XBeeDevice::receive()
     isProcessingPacket = false;
 
     _receive((const uint8_t*)receivePacket);
+//    receive();
 }

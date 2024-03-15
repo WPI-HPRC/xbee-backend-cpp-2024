@@ -7,6 +7,8 @@
 #include "Constants.h"
 #include <QJsonDocument>
 
+#define OFFICIAL_TEST false
+
 DataLogger::DataLogger()
 {
     createDirectory();
@@ -47,8 +49,13 @@ void DataLogger::createFile()
 
     QString timeString = currentTime.toString(Constants::LogTimeFormat);
 
+#if OFFICIAL_TEST
     rocketLogFile.open(logDir.path().append("/").append(timeString).append("_rocket.csv"));
     payloadLogFile.open(logDir.path().append("/").append(timeString).append("_payload.csv"));
+#else
+    rocketLogFile.open(logDir.path().append("/").append(timeString).append("_rocket_NOT_OFFICIAL.csv"));
+    payloadLogFile.open(logDir.path().append("/").append(timeString).append("_payload_NOT_OFFICIAL.csv"));
+#endif
 }
 
 void DataLogger::writeData(const QJsonObject &jsonData, DataLogger::PacketType packetType)

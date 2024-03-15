@@ -20,6 +20,7 @@ public:
 
 private:
     QSerialPort *m_serialPort;
+    QTimer *readTimer;
     void connectSignals();
 
 public slots:

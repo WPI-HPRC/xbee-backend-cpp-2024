@@ -85,7 +85,7 @@ private:
             if (number == static_cast<int>(number)) {
                 return QString::number(static_cast<int>(number)); // Return as integer if it's a whole number
             } else {
-                return QString::number(number, 'f'); // Format with decimals if it's not a whole number
+                return QString::number(number, 'f', 10); // Format with decimals if it's not a whole number
             }
         }
         else if (value.isString())

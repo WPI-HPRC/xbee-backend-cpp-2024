@@ -8,13 +8,7 @@
 #include <QObject>
 #include <QSerialPort>
 #include "Utility.h"
-
-#define AT_COMMAND_BYTES 6 // +2 for length, +1 for frame type, +1 for frame ID, +2 for AT command
-#define TRANSMIT_REQUEST_EXTRA_BYTES 14 // +1 for frame type, +1 for frame ID, +8 for address, +2 for reserved, +1 for broadcast radius
-#define NODE_DISCOVERY_EXTRA_BYTES 0
-
-#define MAX_PACKET_LENGTH 256
-#define MAX_FRAME_LENGTH (MAX_PACKET_LENGTH + 4) // +1 for start delimiter, +2 for length, +1 for checksum
+#include "XBeeUtility.h"
 
 class XBeeDevice: public QObject
 {

@@ -22,11 +22,11 @@ uint8_t calcChecksum(const uint8_t *packet, size_t size_bytes)
 
 XBeeDevice::XBeeDevice(QSerialPort *serialPort, QObject *parent): QObject(parent), m_serialPort(serialPort)
 {
-    receivePacket = new char[MAX_FRAME_LENGTH];
+    receivePacket = new char[XBee::MaxPacketBytes];
 
-    transmitRequestFrame = new uint8_t[MAX_FRAME_LENGTH];
+    transmitRequestFrame = new uint8_t[XBee::MaxFrameBytes];
 
-    nodeDiscoveryFrame = new uint8_t[MAX_FRAME_LENGTH];
+    nodeDiscoveryFrame = new uint8_t[XBee::MaxFrameBytes];
 
     telemPacket = new TelemPacket;
 }
@@ -34,7 +34,7 @@ XBeeDevice::XBeeDevice(QSerialPort *serialPort, QObject *parent): QObject(parent
 void XBeeDevice::sendNodeDiscoveryCommand()
 {
     size_t index = 1;
-    size_t contentLength_bytes = AT_COMMAND_BYTES + NODE_DISCOVERY_EXTRA_BYTES;
+    size_t contentLength_bytes = XBee::AtCommand::NodeDiscovery::PacketBytes;
 
     nodeDiscoveryFrame[index++] = (contentLength_bytes >> 8) & 0xFF;
     nodeDiscoveryFrame[index++] = contentLength_bytes & 0xFF;
@@ -47,12 +47,12 @@ void XBeeDevice::sendNodeDiscoveryCommand()
     nodeDiscoveryFrame[index++] = 'N';
     nodeDiscoveryFrame[index++] = 'D';
 
-    sendFrame(nodeDiscoveryFrame, contentLength_bytes);
+    sendFrame(nodeDiscoveryFrame, XBee::AtCommand::NodeDiscovery::FrameBytes);
 }
 
 void XBeeDevice::sendTransmitRequestCommand(uint64_t address, const uint8_t *data, size_t size_bytes)
 {
-    size_t contentLength_bytes = size_bytes + TRANSMIT_REQUEST_EXTRA_BYTES;
+    size_t contentLength_bytes = size_bytes + XBee::TransmitRequest::PacketBytes;
     size_t index = 1; // skip first byte (start delimiter)
 
     transmitRequestFrame[index++] = (contentLength_bytes >> 8) & 0xFF;
@@ -74,19 +74,19 @@ void XBeeDevice::sendTransmitRequestCommand(uint64_t address, const uint8_t *dat
 
     memcpy(&transmitRequestFrame[index], data, size_bytes);
 
-    sendFrame(transmitRequestFrame, contentLength_bytes);
+    sendFrame(transmitRequestFrame, size_bytes + XBee::TransmitRequest::FrameBytes);
 }
 
 void XBeeDevice::sendFrame(uint8_t *packet, size_t size_bytes)
 {
     packet[0] = 0x7E; // Start delimiter;
-    packet[3 + size_bytes] = calcChecksum(packet, size_bytes);
+    packet[size_bytes - 1] = calcChecksum(packet, size_bytes);
 
 #if DEBUG
-    qDebug() << QByteArray::fromRawData((const char *)packet, (long long)size_bytes + 4).toHex();
+    qDebug() << QByteArray::fromRawData((const char *)packet, (long long)size_bytes).toHex();
 #endif
 
-    m_serialPort->write((const char*)packet, (long long)size_bytes + 4);
+    m_serialPort->write((const char*)packet, (long long)size_bytes);
 }
 
 void XBeeDevice::_receive(const uint8_t *packet)

@@ -16,9 +16,9 @@ class Backend: public QObject
 {
 public:
     explicit Backend(QObject *parent = nullptr);
+    SerialReader *serialReader;
 
 private:
-    SerialReader *serialReader;
     WebServer *webServer;
     DataSimulator *dataSimulator;
     DataLogger *dataLogger;

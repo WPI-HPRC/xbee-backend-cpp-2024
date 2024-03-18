@@ -7,7 +7,7 @@
 #include <iostream>
 #include "SerialReader.h"
 
-#define DEBUG true
+#define DEBUG false
 
 SerialReader::SerialReader(const QSerialPortInfo& port, int baudRate, QObject *parent): QObject(parent)
 {
@@ -36,8 +36,8 @@ SerialReader::SerialReader(const QSerialPortInfo& port, int baudRate, QObject *p
     radioModule = new XBeeDevice(m_serialPort);
 
     readTimer = new QTimer(this);
-//    connect(readTimer, SIGNAL(timeout()), this, SLOT(readyRead()));
-    readTimer->start(20);
+    connect(readTimer, SIGNAL(timeout()), this, SLOT(readyRead()));
+    readTimer->start(30);
 }
 
 void SerialReader::connectSignals()

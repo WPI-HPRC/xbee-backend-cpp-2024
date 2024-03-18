@@ -56,11 +56,14 @@ Backend::Backend(QObject *parent): QObject(parent)
         exit(1);
     }
 
-    QString str = "Hello, World!";
 
     serialReader = new SerialReader(targetPort, QSerialPort::Baud115200);
+
+    /*
+    QString str = "Hello, World!";
     serialReader->radioModule->sendTransmitRequestCommand(0x0013A200423F474C,
                                                           (const uint8_t *) str.toStdString().c_str(), str.length());
+                                                          */
     serialReader->radioModule->sendNodeDiscoveryCommand();
 
     connect(serialReader->radioModule, SIGNAL(dataReady(const uint8_t *, size_t)), webServer, SLOT(dataReady(const uint8_t *, size_t)));

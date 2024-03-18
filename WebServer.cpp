@@ -43,7 +43,9 @@ void WebServer::newConnection()
     {
         return;
     }
+#if DEBUG
     qDebug() << "Socket connected: " << socket->peerAddress().toString();
+#endif
 
     auto *newSocket = new WebSocket(socket);
 

@@ -20,12 +20,17 @@ uint8_t calcChecksum(const uint8_t *packet, uint8_t size_bytes)
     return 0xFF - sum;
 }
 
+uint8_t getFrameType(const uint8_t *packet)
+{
+    return packet[3];
+}
+
 XBee::BasicFrame XBeeDevice::createSetATParamValueFrame(uint16_t command, uint8_t value)
 {
 
 }
 
-XBeeDevice::XBeeDevice(QSerialPort *serialPort, QObject *parent): QObject(parent), m_serialPort(serialPort)
+XBeeDevice::XBeeDevice(QSerialPort *serialPort, QObject *parent) : QObject(parent), m_serialPort(serialPort)
 {
     receiveFrame = new char[XBee::MaxPacketBytes];
 
@@ -35,9 +40,11 @@ XBeeDevice::XBeeDevice(QSerialPort *serialPort, QObject *parent): QObject(parent
 
     telemPacket = new TelemPacket;
 
-    test = new uint8_t[XBee::MaxFrameBytes];
-
     nodeID = new char[20];
+
+    buffer = serialCircularBufferCreate(BUFFER_LENGTH, XBee::MaxFrameBytes);
+
+    currentFrameID = 1;
 }
 
 void XBeeDevice::queryParameter(uint16_t parameter)
@@ -47,15 +54,34 @@ void XBeeDevice::queryParameter(uint16_t parameter)
 
 void XBeeDevice::setParameter(uint16_t parameter, const uint8_t value)
 {
-    sendAtCommandLocal(parameter, &value, 1);
+    setParameter(parameter, &value, 1);
 }
 
 void XBeeDevice::setParameter(uint16_t parameter, const uint8_t *value, size_t valueSize_bytes)
 {
-    sendAtCommandLocal(parameter, value, valueSize_bytes);
+    // Could queue it, but just set it directly right now
+    queueAtCommandLocal(parameter, value, valueSize_bytes);
+//    write();
+//    applyChanges();
 }
 
-void XBeeDevice::sendAtCommandLocal(uint16_t command, const uint8_t *commandData, size_t commandDataSize_bytes)
+void XBeeDevice::applyChanges()
+{
+    sendAtCommandLocal(XBee::AtCommand::ApplyChanges, nullptr, 0);
+}
+
+void XBeeDevice::write()
+{
+    sendAtCommandLocal(XBee::AtCommand::Write, nullptr, 0);
+}
+
+void XBeeDevice::queueAtCommandLocal(uint16_t command, const uint8_t *commandData, size_t commandDataSize_bytes)
+{
+    sendAtCommandLocal(XBee::FrameType::AtCommandQueueParameterValue, command, commandData, commandDataSize_bytes);
+}
+
+void XBeeDevice::sendAtCommandLocal(uint8_t frameType, uint16_t command, const uint8_t *commandData,
+                                    size_t commandDataSize_bytes)
 {
     size_t index = 1;
     size_t contentLength_bytes = XBee::AtCommandTransmit::PacketBytes + commandDataSize_bytes;
@@ -63,26 +89,31 @@ void XBeeDevice::sendAtCommandLocal(uint16_t command, const uint8_t *commandData
     atCommandFrame[index++] = (contentLength_bytes >> 8) & 0xFF;
     atCommandFrame[index++] = contentLength_bytes & 0xFF;
 
-    atCommandFrame[index++] = 0x08; // Local AT Command Request
-    atCommandFrame[index++] = 0x01; // Frame ID
+    atCommandFrame[index++] = frameType; // Local AT Command Request
+    qDebug() << "Current Frame ID: " << currentFrameID;
+    atCommandFrame[index++] = currentFrameID++; // Frame ID
 
     atCommandFrame[index++] = (command >> 8) & 0xFF;
     atCommandFrame[index++] = command & 0xFF;
 
-    if(commandData)
+    if (commandData)
     {
         memcpy(&atCommandFrame[index], commandData, commandDataSize_bytes);
     }
     sendFrame(atCommandFrame, commandDataSize_bytes + XBee::AtCommandTransmit::FrameBytes);
 }
 
+void XBeeDevice::sendAtCommandLocal(uint16_t command, const uint8_t *commandData, size_t commandDataSize_bytes)
+{
+    sendAtCommandLocal(XBee::FrameType::AtCommand, command, commandData, commandDataSize_bytes);
+}
+
 void XBeeDevice::sendNodeDiscoveryCommand()
 {
-    // Query it first
-//    setParameter(XBee::AtCommand::NodeDiscoveryBackoff, 0x20);
+    setParameter(XBee::AtCommand::NodeDiscoveryBackoff, 0x20);
 //    sendAtCommandLocal(AsciiToUint16('K', 'Z'), nullptr, 0);
-//    setParameter(XBee::AtCommand::NodeDiscoveryOptions, 0x02);
-    sendAtCommandLocal(XBee::AtCommand::NodeDiscovery, nullptr, 0);
+    setParameter(XBee::AtCommand::NodeDiscoveryOptions, 0x02);
+//    sendAtCommandLocal(XBee::AtCommand::NodeDiscovery, nullptr, 0);
 }
 
 void XBeeDevice::sendTransmitRequestCommand(uint64_t address, const uint8_t *data, size_t size_bytes)
@@ -94,7 +125,7 @@ void XBeeDevice::sendTransmitRequestCommand(uint64_t address, const uint8_t *dat
     transmitRequestFrame[index++] = contentLength_bytes & 0xFF;
 
     transmitRequestFrame[index++] = 0x10; // Transmit Request
-    transmitRequestFrame[index++] = 0x01; // Frame ID
+    transmitRequestFrame[index++] = currentFrameID++; // Frame ID
 
     for (int i = 0; i < 8; i++)
     {
@@ -112,27 +143,37 @@ void XBeeDevice::sendTransmitRequestCommand(uint64_t address, const uint8_t *dat
     sendFrame(transmitRequestFrame, size_bytes + XBee::TransmitRequest::FrameBytes);
 }
 
-void XBeeDevice::sendFrame(uint8_t *packet, size_t size_bytes)
+void XBeeDevice::sendFrame(uint8_t *frame, size_t size_bytes)
 {
-    packet[0] = 0x7E; // Start delimiter;
-    packet[size_bytes - 1] = calcChecksum(packet, size_bytes);
+    frame[0] = 0x7E; // Start delimiter;
+    frame[size_bytes - 1] = calcChecksum(frame, size_bytes);
 
+    auto *frameStruct = new XBee::BasicFrame{};
+    frameStruct->length_bytes = size_bytes;
+    frameStruct->frame = (uint8_t *) malloc(size_bytes);
+    memcpy(frameStruct->frame, frame, size_bytes);
+
+    transmitFrameQueue.push(frameStruct);
+}
+
+void XBeeDevice::serialSend(const char *data, size_t length_bytes)
+{
 #if DEBUG
-    qDebug() << "Sending packet " << QByteArray::fromRawData((const char *)packet, (long long)size_bytes).toHex();
+    qDebug() << "Sending frame " << QByteArray::fromRawData((const char *) data, (long long) length_bytes).toHex();
 #endif
-
-    m_serialPort->write((const char*)packet, (long long)size_bytes);
+    m_serialPort->write(data, (long long) length_bytes);
 }
 
-void XBeeDevice::handleReceivePacket(XBee::ReceivePacket::Struct *packet)
+void XBeeDevice::handleReceivePacket(XBee::ReceivePacket::Struct *frame)
 {
-    // For now, assume that the packet is the rocket packet and don't do any other checking
-    emit dataReady(packet->data, packet->dataLength_bytes);
+    // For now, assume that the frame is the rocket frame and don't do any other checking
+    emit dataReady(frame->data, frame->dataLength_bytes);
 }
 
-void XBeeDevice::parseReceivePacket(const uint8_t *packet, uint8_t length_bytes)
+void XBeeDevice::parseReceivePacket(const uint8_t *frame, uint8_t length_bytes)
 {
-    uint8_t payloadLength = length_bytes - XBee::ReceivePacket::PacketBytes; // Subtract the number of base packet bytes from the total number of packet bytes
+    uint8_t payloadLength = length_bytes -
+                            XBee::ReceivePacket::PacketBytes; // Subtract the number of base frame bytes from the total number of frame bytes
 
     uint64_t addr = 0;
 
@@ -140,13 +181,13 @@ void XBeeDevice::parseReceivePacket(const uint8_t *packet, uint8_t length_bytes)
 
     for (int i = 0; i < 8; i++)
     {
-        addr = addr | (packet[index++] << 8 * i);
+        addr = addr | (frame[index++] << 8 * i);
     }
 #if DEBUG
     QByteArray addressBytes;
     for (int i = 0; i < 8; i++)
     {
-        addressBytes.append((char)packet[i + XBee::ReceivePacket::BytesBeforeAddress]);
+        addressBytes.append((char) frame[i + XBee::ReceivePacket::BytesBeforeAddress]);
     }
 //    qDebug() << "Received message from: " <<  addressBytes.toHex();
 
@@ -154,80 +195,65 @@ void XBeeDevice::parseReceivePacket(const uint8_t *packet, uint8_t length_bytes)
 
     receivePacketStruct->dataLength_bytes = payloadLength;
     receivePacketStruct->senderAddress = addr;
-    receivePacketStruct->data = &packet[XBee::ReceivePacket::BytesBeforePayload];
+    receivePacketStruct->data = &frame[XBee::ReceivePacket::BytesBeforePayload];
 
     handleReceivePacket(receivePacketStruct);
 }
 
-uint16_t XBeeDevice::getAtCommand(const uint8_t *packet)
+uint16_t XBeeDevice::getAtCommand(const uint8_t *frame)
 {
-    return packet[XBee::AtCommandResponse::BytesBeforeCommand] << 8 | packet[XBee::AtCommandResponse::BytesBeforeCommand + 1];
+    return frame[XBee::AtCommandResponse::BytesBeforeCommand] << 8 |
+           frame[XBee::AtCommandResponse::BytesBeforeCommand + 1];
 }
 
-void XBeeDevice::handleNodeDiscoveryResponse(const uint8_t *packet, uint8_t length_bytes)
+void XBeeDevice::handleNodeDiscoveryResponse(const uint8_t *frame, uint8_t length_bytes)
 {
-    for (int i = 0; i < length_bytes + XBee::FrameBytes; i++)
-    {
-//        qDebug() << Qt::hex << packet[i];
-    }
     size_t index = XBee::AtCommandResponse::BytesBeforeCommandData + 2; // Add two to skip the MY parameter
 
     uint32_t serialHigh = 0;
     for (int i = 0; i < 4; i++)
     {
-        serialHigh = serialHigh | (packet[index++] << 8 * (7-i));
+        serialHigh = serialHigh | (frame[index++] << 8 * (7 - i));
     }
 
     uint32_t serialLow = 0;
     for (int i = 0; i < 4; i++)
     {
-        serialLow = serialLow | (packet[index++] << 8 * (7-i));
+        serialLow = serialLow | (frame[index++] << 8 * (7 - i));
     }
 
     uint64_t serialNumber = serialHigh;
     serialNumber = serialNumber << 32 | serialLow;
 
-//    qDebug() << "Serial number: " << Qt::hex << serialNumber;
-
-//    uint8_t signalStrength = packet[index++];
-
     int iDLength = 0;
 
     for (int i = 0; i < 20; i++)
     {
-        uint8_t byte = packet[index++];
+        uint8_t byte = frame[index++];
 
-        if(byte == 0x00)
+        if (byte == 0x00)
         {
-            if(i > 0)
-                iDLength = i; // Remember that there is an extra byte in the packet; this null character
+            if (i > 0)
+            {
+                iDLength = i;
+            } // Remember that there is an extra byte in the frame; this null character
             break;
         }
 
-        nodeID[i] = (char)byte;
+        nodeID[i] = (char) byte;
     }
 
-//    qDebug() << "Node ID: " << QString::fromUtf8(nodeID, iDLength);
+    uint16_t parentNetworkAddress = frame[index++] << 8;
+    parentNetworkAddress |= frame[index++];
 
-    uint16_t parentNetworkAddress = packet[index++] << 8;
-    parentNetworkAddress |= packet[index++];
+    uint8_t deviceType = frame[index++];
+    uint8_t status = frame[index++];
 
-//    qDebug() << "Parent address: " << Qt::hex << parentNetworkAddress;
+    uint16_t profileID = frame[index++] << 8;
+    profileID |= frame[index++];
 
-    uint8_t deviceType = packet[index++];
-//    qDebug() << "Device Type: " << Qt::hex << deviceType;
-
-    uint8_t status = packet[index++];
-//    qDebug() << "Status: " << Qt::hex << status;
-
-    uint16_t profileID = packet[index++] << 8;
-    profileID |= packet[index++];
-//    qDebug() << "Profile ID: " << Qt::hex << profileID;
-
-    uint16_t manufacturerID = packet[index++] << 8;
-    manufacturerID |= packet[index++];
-
-//    qDebug() << "Manufacturer ID: " << Qt::hex << manufacturerID;
+    uint16_t manufacturerID = frame[index++] << 8;
+    manufacturerID |= frame[index++];
 
 /*
     if(length_bytes - iDLength > XBee::AtCommandResponse::NodeDiscovery::FrameBytes)
@@ -241,28 +267,28 @@ void XBeeDevice::handleNodeDiscoveryResponse(const uint8_t *packet, uint8_t leng
     qDebug() << "Found device " << QString::fromUtf8(nodeID, iDLength) << "-" << Qt::hex << serialNumber;
 }
 
-void XBeeDevice::handleNodeDiscoveryOptionsResponse(const uint8_t *packet, uint8_t length_bytes)
+void XBeeDevice::handleNodeDiscoveryOptionsResponse(const uint8_t *frame, uint8_t length_bytes)
 {
     uint8_t dataLength = length_bytes - XBee::AtCommandResponse::PacketBytes;
 
-    if(dataLength > 1)
+    if (dataLength > 1)
     {
         qDebug() << "More than 1 byte...?";
         return;
     }
 
-    uint8_t value = packet[XBee::AtCommandResponse::BytesBeforeCommandData];
+    uint8_t value = frame[XBee::AtCommandResponse::BytesBeforeCommandData];
 
-    if(value != 0x02)
+    if (value != 0x02)
     {
         setParameter(XBee::AtCommand::NodeDiscoveryOptions, 0x02);
     }
 }
 
-void XBeeDevice::handleAtCommandResponse(const uint8_t *packet, uint8_t length_bytes)
+void XBeeDevice::handleAtCommandResponse(const uint8_t *frame, uint8_t length_bytes)
 {
-    uint8_t commandStatus = packet[XBee::AtCommandResponse::BytesBeforeCommandStatus];
-    if(commandStatus != 0x00)
+    uint8_t commandStatus = frame[XBee::AtCommandResponse::BytesBeforeCommandStatus];
+    if (commandStatus != 0x00)
     {
         QString commandString = "";
         switch (commandStatus)
@@ -284,22 +310,29 @@ void XBeeDevice::handleAtCommandResponse(const uint8_t *packet, uint8_t length_b
         return;
     }
 
-    uint16_t command = getAtCommand(packet);
+    uint16_t command = getAtCommand(frame);
 
-    if(length_bytes == XBee::AtCommandResponse::PacketBytes)
+    if (!atParamConfirmationsBeingWaitedOn.empty())
     {
-        qDebug() << "Response for " << Qt::hex << command << ": OK";
-        return;
+        if (atParamConfirmationsBeingWaitedOn.front() == command)
+        {
+            atParamConfirmationsBeingWaitedOn.pop();
+            qDebug() << "Response for " << Qt::hex << command << ": OK";
+            return;
+        }
     }
 
     switch (command)
     {
         case XBee::AtCommand::NodeDiscovery:
-            handleNodeDiscoveryResponse(packet, length_bytes);
+            handleNodeDiscoveryResponse(frame, length_bytes);
             break;
         case XBee::AtCommand::NodeDiscoveryOptions:
-            handleNodeDiscoveryOptionsResponse(packet, length_bytes);
+            handleNodeDiscoveryOptionsResponse(frame, length_bytes);
             break;
+
+        case 0x4E54:
+            return;
 
         default:
             qDebug() << "Unimplemented At Command response: " << Qt::hex << command;
@@ -307,18 +340,17 @@ void XBeeDevice::handleAtCommandResponse(const uint8_t *packet, uint8_t length_b
     }
 }
 
-bool XBeeDevice::_receive(const uint8_t *packet)
+bool XBeeDevice::handleFrame(const uint8_t *frame)
 {
     size_t index = 1; // Skip start delimiter
 
-    uint8_t lengthLow = packet[index++];
-    uint8_t lengthHigh = packet[index++];
-    uint8_t frameType = packet[index++];
+    uint8_t lengthLow = frame[index++];
+    uint8_t lengthHigh = frame[index++];
 
-    uint8_t calculatedChecksum = calcChecksum(packet, lengthHigh);
-    uint8_t receivedChecksum = packet[lengthHigh + XBee::FrameBytes - 1];
+    uint8_t calculatedChecksum = calcChecksum(frame, lengthHigh);
+    uint8_t receivedChecksum = frame[lengthHigh + XBee::FrameBytes - 1];
 
-    if(calculatedChecksum != receivedChecksum)
+    if (calculatedChecksum != receivedChecksum)
     {
 #if DEBUG
         /*
@@ -329,38 +361,40 @@ bool XBeeDevice::_receive(const uint8_t *packet)
         QByteArray checksumBytes;
         for (int i = 0; i < lengthHigh - 1; i++)
         {
-            checksumBytes.append((char)packet[i + 3]);
+            checksumBytes.append((char)frame[i + 3]);
         }
 
         for (int i = 0; i < lengthHigh + XBee::FrameBytes; i++)
         {
-            qDebug() << "Index " << i << ": " << Qt::hex << packet[i];
+            qDebug() << "Index " << i << ": " << Qt::hex << frame[i];
         }
         qDebug() << "Checksum index: " << lengthHigh + XBee::FrameBytes - 1;
-        qDebug() << "Checksum: " << Qt::hex << packet[lengthHigh + XBee::FrameBytes - 1];
+        qDebug() << "Checksum: " << Qt::hex << frame[lengthHigh + XBee::FrameBytes - 1];
         qDebug() << "Checksum bytes:        " << checksumBytes.toHex();
          */
 
-//        qDebug() << "Checksums do not match. Calculated: " << Qt::hex << calculatedChecksum << "Received: " << packet[index];
+        qDebug() << "Checksums do not match. Calculated: " << Qt::hex << calculatedChecksum << "Received: "
+                 << receivedChecksum;
 //        qDebug() << "Packet received: " << QByteArray::fromRawData(receiveFrame, lengthHigh + XBee::FrameBytes).toHex();
 
 #endif
 //        return false;
     }
 
-    memcpy(test, packet, lengthHigh + XBee::FrameBytes);
+    uint8_t frameType = frame[index++];
 
-//    qDebug() << "Packet received: " << QByteArray::fromRawData(receiveFrame, lengthHigh + XBee::FrameBytes).toHex();
+//    qDebug() << "Packet received: "
+//             << QByteArray::fromRawData((const char *) frame, lengthHigh + XBee::FrameBytes).toHex();
 //    qDebug() << "Checksum bits: " << checksumBits.toHex();
 
     switch (frameType)
     {
         case XBee::FrameType::ReceivePacket:
-            parseReceivePacket(test, lengthHigh);
+            parseReceivePacket(frame, lengthHigh);
             break;
 
         case XBee::FrameType::AtCommandResponse:
-            handleAtCommandResponse(test, lengthHigh);
+            handleAtCommandResponse(frame, lengthHigh);
             break;
 
         default:
@@ -372,44 +406,79 @@ bool XBeeDevice::_receive(const uint8_t *packet)
 
 void XBeeDevice::receive()
 {
-    while (true)
+    m_serialPort->read(receiveFrame, 1);
+
+    if (receiveFrame[0] != XBee::StartDelimiter)
     {
-        if (isProcessingPacket)
-        {
-            qDebug() << "Already processing packet";
-            return;
-        }
-
-        isProcessingPacket = true;
-        m_serialPort->read(receiveFrame, 1);
-
-        // Check for start delimiter
-        if (receiveFrame[0] != XBee::StartDelimiter)
-        {
 #if DEBUG
-            if(receiveFrame[0] != 0x00)
-            {
-//                qDebug() << "Wrong start delimiter: " << Qt::hex << (uint8_t) receiveFrame[0];
-            }
-#endif
-
-            isProcessingPacket = false;
-            return;
+        if (receiveFrame[0] != 0x00)
+        {
+//            qDebug() << "Wrong start delimiter: " << Qt::hex << (uint8_t) receiveFrame[0];
         }
-
-        // Read the length of the packet (16 bits = 2 bytes) and place it directly after the start delimiter in our receive memory
-        m_serialPort->read(&receiveFrame[1], 2);
-
-        // Read the rest of the packet. The length represents the number of bytes between the length and the checksum.
-        // The second of the two length bytes holds the real length of the packet.
-        m_serialPort->read(&receiveFrame[3], receiveFrame[2] + 1);
-
-        bool success = _receive((const uint8_t *) receiveFrame);
-        isProcessingPacket = false;
-        if(!success)
-            return;
+#endif
         return;
-//        qDebug("Looping");
     }
 
+    // Read the length of the frame (16 bits = 2 bytes) and place it directly after the start delimiter in our receive memory
+    m_serialPort->read(&receiveFrame[1], 2);
+    uint8_t length = receiveFrame[2];
+
+    // Read the rest of the frame. The length represents the number of bytes between the length and the checksum.
+    // The second of the two length bytes holds the real length of the frame.
+    m_serialPort->read(&receiveFrame[3], length + 1);
+
+    if (length != 123)
+    {
+        qDebug() << "Received Frame: "
+                 << QByteArray::fromRawData((const char *) receiveFrame, length + XBee::FrameBytes).toHex();
+
+        qDebug() << "Length: " << length;
+        qDebug() << "Length copied: " << length + XBee::FrameBytes;
+    }
+    serialCircularBufferAdd(buffer, (uint8_t *) receiveFrame, length + XBee::FrameBytes);
+}
+
+void XBeeDevice::doCycle()
+{
+    // First, read frames from serial
+//    receive();
+
+
+    // Next, handle the frames in our buffer
+    for (int i = 0; i < BUFFER_LENGTH; i++)
+    {
+        uint8_t *frame = serialCircularBufferGetValueAtIndex(buffer, -i - 1); // Go backwards
+
+        if (frame[0] == XBee::StartDelimiter)
+        {
+            handleFrame(frame);
+            frame[0] = 0x00; // So we know the frame has been read
+        }
+        else
+        {
+            break; // Assume all packets have been read if we reach a frame that has already been read
+        }
+    }
+
+    // Finally, send out any frames that need to be sent
+
+    while (true)
+    {
+        if (!atParamConfirmationsBeingWaitedOn.empty() || transmitFrameQueue.empty())
+        {
+//            qDebug() << "Breaking";
+            break;
+        }
+        XBee::BasicFrame *frame = transmitFrameQueue.front();
+        uint8_t frameType = getFrameType(frame->frame);
+        if (frameType == XBee::FrameType::AtCommandQueueParameterValue || frameType == XBee::FrameType::AtCommand)
+        {
+//            qDebug() << "At Command";
+            atParamConfirmationsBeingWaitedOn.push(getAtCommand(frame->frame));
+        }
+        serialSend((const char *) frame->frame, frame->length_bytes);
+        transmitFrameQueue.pop();
+        free(frame->frame);
+        free(frame);
+    }
 }

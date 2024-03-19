@@ -4,7 +4,7 @@
 
 #include <cstdint>
 
-#define AsciiToUint16(x,y)((uint16_t)x << 8 | y)
+#define AsciiToUint16(x, y)((uint16_t)x << 8 | y)
 
 #ifndef XBEE_BACKEND_CPP_XBEEUTILITY_H
 #define XBEE_BACKEND_CPP_XBEEUTILITY_H
@@ -60,7 +60,9 @@ namespace XBee
         {
             NodeDiscovery = AsciiToUint16('N', 'D'),
             NodeDiscoveryOptions = AsciiToUint16('N', 'O'),
-            NodeDiscoveryBackoff = AsciiToUint16('N', 'T')
+            NodeDiscoveryBackoff = AsciiToUint16('N', 'T'),
+            Write = AsciiToUint16('W', 'R'),
+            ApplyChanges = AsciiToUint16('A', 'C')
         };
         enum CommandStatus
         {
@@ -74,9 +76,8 @@ namespace XBee
 
     struct BasicFrame
     {
-        FrameType::FrameType frameType;
         size_t length_bytes;
-        uint8_t *packet;
+        uint8_t *frame;
     };
 
     const uint8_t MaxPacketBytes = 255;
@@ -95,6 +96,12 @@ namespace XBee
             const uint8_t PacketBytes = AtCommandTransmit::PacketBytes + 0;
             const uint8_t FrameBytes = XBee::FrameBytes + PacketBytes;
         }
+    }
+
+    namespace AtCommandQueue
+    {
+        const uint8_t PacketBytes = 4;
+        const uint8_t FrameBytes = XBee::FrameBytes + PacketBytes;
     }
 
     namespace TransmitRequest
@@ -131,9 +138,11 @@ namespace XBee
 
         namespace NodeDiscovery
         {
-            const uint8_t PacketBytes = AtCommandResponse::PacketBytes + 14; // +4 for SH, +4 for SL, +1 for Device Type, +1 for status, +2 for profile ID, +2 for manufacturer ID
+            const uint8_t PacketBytes = AtCommandResponse::PacketBytes +
+                                        14; // +4 for SH, +4 for SL, +1 for Device Type, +1 for status, +2 for profile ID, +2 for manufacturer ID
             const uint8_t FrameBytes = XBee::FrameBytes + PacketBytes;
-            const uint8_t MaxPacketBytes = PacketBytes + 26; // +20 for NI, +1 for NI null byte, +4 for Digi Device Type, +1 for RSSI of last hop
+            const uint8_t MaxPacketBytes = PacketBytes +
+                                           26; // +20 for NI, +1 for NI null byte, +4 for Digi Device Type, +1 for RSSI of last hop
         }
     }
 

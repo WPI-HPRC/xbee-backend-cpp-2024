@@ -10,37 +10,54 @@
 
 #include "XBeeDevice.h"
 
-class SerialReader: public QObject
+class SerialReader : public QObject
 {
-    Q_OBJECT
+Q_OBJECT
 
 public:
-    SerialReader(const QSerialPortInfo& port, int baudRate, QObject *parent = nullptr);
+    SerialReader(const QSerialPortInfo &port, int baudRate, QObject *parent = nullptr);
+
     XBeeDevice *radioModule;
 
 private:
     QSerialPort *m_serialPort;
     QTimer *readTimer;
+
     void connectSignals();
 
 public slots:
+
     void readyRead();
 
     static void baudRateChanged(qint32 baudRate, QSerialPort::Directions directions);
-    static void	breakEnabledChanged(bool set);
-    static void	dataBitsChanged(QSerialPort::DataBits dataBits);
-    static void	dataTerminalReadyChanged(bool set);
-    static void	errorOccurred(QSerialPort::SerialPortError error);
-    static void	flowControlChanged(QSerialPort::FlowControl flow);
-    static void	parityChanged(QSerialPort::Parity parity);
-    static void	requestToSendChanged(bool set);
-    static void	stopBitsChanged(QSerialPort::StopBits stopBits);
 
-    static void	aboutToClose();
-    static void	bytesWritten(qint64 bytes);
-    static void	channelBytesWritten(int channel, qint64 bytes);
-    static void	channelReadyRead(int channel);
-    static void	readChannelFinished();
+    static void breakEnabledChanged(bool set);
+
+    static void dataBitsChanged(QSerialPort::DataBits dataBits);
+
+    static void dataTerminalReadyChanged(bool set);
+
+    static void errorOccurred(QSerialPort::SerialPortError error);
+
+    static void flowControlChanged(QSerialPort::FlowControl flow);
+
+    static void parityChanged(QSerialPort::Parity parity);
+
+    static void requestToSendChanged(bool set);
+
+    static void stopBitsChanged(QSerialPort::StopBits stopBits);
+
+    static void aboutToClose();
+
+    void bytesWritten(qint64 bytes);
+
+    static void channelBytesWritten(int channel, qint64 bytes);
+
+    static void channelReadyRead(int channel);
+
+    static void readChannelFinished();
+
+    void doCycle();
 
 };
 

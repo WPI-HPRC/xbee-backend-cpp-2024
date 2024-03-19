@@ -29,7 +29,8 @@ add_executable(xbee_backend_cpp main.cpp
         DataLogger.cpp
         DataLogger.h
         Constants.h
-        XBeeUtility.h)
+        XBeeUtility.h
+        CircularBuffer.hpp)
 target_link_libraries(xbee_backend_cpp
         Qt::Core
         Qt6::SerialPort

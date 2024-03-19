@@ -158,6 +158,9 @@ void SerialReader::readyRead()
 #if DEBUG
     //    qDebug() << "Ready read: " << QDateTime::currentDateTime();
 #endif
-    radioModule->receive();
+    if (m_serialPort->canReadLine())
+    {
+        radioModule->receive();
+    }
 }
 

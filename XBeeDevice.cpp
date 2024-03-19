@@ -358,11 +358,7 @@ bool XBeeDevice::handleFrame(const uint8_t *frame)
         qDebug() << "Length high: " << lengthHigh;
         qDebug() << "Frame Type:  " << Qt::hex << frameType;
 
-        QByteArray checksumBytes;
-        for (int i = 0; i < lengthHigh - 1; i++)
-        {
-            checksumBytes.append((char)frame[i + 3]);
-        }
+
 
         for (int i = 0; i < lengthHigh + XBee::FrameBytes; i++)
         {
@@ -370,12 +366,21 @@ bool XBeeDevice::handleFrame(const uint8_t *frame)
         }
         qDebug() << "Checksum index: " << lengthHigh + XBee::FrameBytes - 1;
         qDebug() << "Checksum: " << Qt::hex << frame[lengthHigh + XBee::FrameBytes - 1];
-        qDebug() << "Checksum bytes:        " << checksumBytes.toHex();
          */
+        QByteArray checksumBytes;
+        for (int i = 0; i < lengthHigh - 1; i++)
+        {
+            checksumBytes.append((char) frame[i + 3]);
+        }
+        qDebug() << "---------";
+        qDebug() << "Checksum bytes:        " << checksumBytes.toHex();
+
 
         qDebug() << "Checksums do not match. Calculated: " << Qt::hex << calculatedChecksum << "Received: "
                  << receivedChecksum;
-//        qDebug() << "Packet received: " << QByteArray::fromRawData(receiveFrame, lengthHigh + XBee::FrameBytes).toHex();
+        qDebug() << "Packet received: "
+                 << QByteArray::fromRawData((const char *) frame, lengthHigh + XBee::FrameBytes).toHex();
+        qDebug() << "---------";
 
 #endif
 //        return false;
@@ -420,7 +425,15 @@ void XBeeDevice::receive()
     }
 
     // Read the length of the frame (16 bits = 2 bytes) and place it directly after the start delimiter in our receive memory
-    m_serialPort->read(&receiveFrame[1], 2);
+    m_serialPort->read(&receiveFrame[1], 1);
+
+    if (receiveFrame[1] != 0x00)
+    {
+        return;
+    }
+
+    m_serialPort->read(&receiveFrame[2], 1);
+
     uint8_t length = receiveFrame[2];
 
     // Read the rest of the frame. The length represents the number of bytes between the length and the checksum.
@@ -444,6 +457,7 @@ void XBeeDevice::doCycle()
 //    receive();
 
 
+//m_serialPort->flush()
     // Next, handle the frames in our buffer
     for (int i = 0; i < BUFFER_LENGTH; i++)
     {

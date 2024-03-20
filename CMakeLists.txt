@@ -10,14 +10,13 @@ set(BOOST_ROOT /usr/local/Cellar/boost/1.80.0)
 set(BOOST_INCLUDEDIR /usr/local/Cellar/boost/1.80.0/include)
 set(BOOST_LIBRARY_DIR /usr/local/Cellar/boost/1.80.0/lib)
 
-find_package(Boost 1.80.0 COMPONENTS system filesystem REQUIRED)
+find_package(Boost 1.80.0 COMPONENTS system filesystem thread REQUIRED)
 
-include_directories(${Boost_INCLUDE_DIR})
+include_directories(${Boost_INCLUDE_DIRS})
 
 if (NOT Boost_FOUND)
-    message(FATAL_ERROR "Could not find boost!")
+    message(FATAL_ERROR "Could not find Boost!")
 endif ()
-
 
 find_package(Qt6 COMPONENTS
         Core
@@ -47,9 +46,10 @@ add_executable(xbee_backend_cpp main.cpp
         RadioModule.h
         SerialPort.cpp
         SerialPort.h)
+
 target_link_libraries(xbee_backend_cpp
         Qt::Core
         Qt6::SerialPort
         Qt6::WebSockets
+        ${Boost_LIBRARIES}
 )
-

@@ -50,4 +50,11 @@ public:
 
     void read_some(const char *buffer, size_t size_bytes);
 
+protected:
+    virtual void async_read_some_();
+
+    virtual void on_receive_(const boost::system::error_code &ec, size_t bytes_transferred);
+
+    virtual void on_receive_(const std::string &data);
+
 };

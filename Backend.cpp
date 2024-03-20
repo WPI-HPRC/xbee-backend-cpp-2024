@@ -63,5 +63,5 @@ Backend::Backend(QObject *parent) : QObject(parent)
 
     serialReader = new SerialReader(targetPort, QSerialPort::Baud115200);
 
-    serialReader->radioModule->sendNodeDiscoveryCommand();
+//    serialReader->radioModule->sendNodeDiscoveryCommand();
 }

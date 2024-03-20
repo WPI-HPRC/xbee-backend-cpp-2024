@@ -11,6 +11,7 @@
 
 SerialReader::SerialReader(const QSerialPortInfo &port, int baudRate, QObject *parent) : QObject(parent)
 {
+    /*
     m_serialPort = new QSerialPort();
 
     m_serialPort->setBaudRate(baudRate);
@@ -21,6 +22,7 @@ SerialReader::SerialReader(const QSerialPortInfo &port, int baudRate, QObject *p
     m_serialPort->setFlowControl(QSerialPort::NoFlowControl);
 
     m_serialPort->setReadBufferSize(10000);
+
 
 
     if (m_serialPort->open(QIODevice::ReadWrite))
@@ -37,16 +39,20 @@ SerialReader::SerialReader(const QSerialPortInfo &port, int baudRate, QObject *p
     }
 
 
-    qDebug() << "Read buffer size: " << m_serialPort->readBufferSize();
+    */
+
+//    qDebug() << "Read buffer size: " << m_serialPort->readBufferSize();
 
 
     std::cout.flush();
 
     radioModule = new RadioModule();
 
+    /*
     readTimer = new QTimer(this);
     connect(readTimer, SIGNAL(timeout()), this, SLOT(doCycle()));
     readTimer->start(20);
+     */
 }
 
 void SerialReader::connectSignals()

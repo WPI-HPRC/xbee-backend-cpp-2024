@@ -7,11 +7,18 @@
 
 #include "XBee/XBeeDevice.h"
 #include "SerialPort.h"
+#include <boost/asio.hpp>
 
 class RadioModule : public XBeeDevice
 {
 public:
     RadioModule();
+
+    boost::asio::io_service io_service;
+
+    void loop(const boost::system::error_code &error);
+
+    void startLoop();
 
     SerialPort serialPort;
 

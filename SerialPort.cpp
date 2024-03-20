@@ -32,7 +32,13 @@ bool SerialPort::start(const char *com_port_name, int baud_rate)
     }
 
     port_ = serial_port_ptr(new boost::asio::serial_port(io_service_));
-    port_->open(std::string("/dev/tty.usbserial-A28DMVHS"), ec);
+    port_->open(com_port_name, ec);
+    if (ec)
+    {
+        std::cout << "error : port_->open() failed...com_port_name="
+                  << com_port_name << ", e=" << ec.message().c_str() << std::endl;
+        return false;
+    }
 
     // option settings...
     port_->set_option(boost::asio::serial_port_base::baud_rate(baud_rate));
@@ -41,10 +47,13 @@ bool SerialPort::start(const char *com_port_name, int baud_rate)
     port_->set_option(boost::asio::serial_port_base::parity(boost::asio::serial_port_base::parity::none));
     port_->set_option(boost::asio::serial_port_base::flow_control(boost::asio::serial_port_base::flow_control::none));
 
-//    boost::thread t(boost::bind(&boost::asio::io_service::run, &io_service_));
+    boost::thread t(boost::bind(&boost::asio::io_service::run, &io_service_));
+
+    async_read_some_();
 
     return true;
 }
+
 
 void SerialPort::stop()
 {
@@ -77,13 +86,64 @@ int SerialPort::write_some(const char *buf, const int &size)
     return port_->write_some(boost::asio::buffer(buf, size), ec);
 }
 
-void SerialPort::read_some(const char *buffer, size_t size_bytes)
+void SerialPort::async_read_some_()
 {
     if (port_.get() == nullptr || !port_->is_open())
-    { return; }
+    {
+        std::cout << "Not getting";
+        return;
+    }
+    std::cout << "Getting";
+    std::cout.flush();
 
 
-    port_->read_some(
-            boost::asio::buffer(read_buf_raw_, size_bytes)
-    );
+    port_->async_read_some(
+            boost::asio::buffer(read_buf_raw_, SERIAL_PORT_READ_BUF_SIZE),
+            boost::bind(
+                    &SerialPort::on_receive_,
+                    this, boost::asio::placeholders::error,
+                    boost::asio::placeholders::bytes_transferred));
+}
+
+void SerialPort::on_receive_(const boost::system::error_code &ec, size_t bytes_transferred)
+{
+    std::cout << "On receive";
+    boost::mutex::scoped_lock look(mutex_);
+
+    if (port_.get() == NULL || !port_->is_open())
+    {
+        std::cout << "Not reading";
+        std::cout.flush();
+        return;
+    }
+    if (ec)
+    {
+        async_read_some_();
+        std::cout << "EC";
+        std::cout.flush();
+        return;
+    }
+
+    std::cout << "Reading";
+    for (unsigned int i = 0; i < bytes_transferred; ++i)
+    {
+        char c = read_buf_raw_[i];
+        if (c == end_of_line_char_)
+        {
+            this->on_receive_(read_buf_str_);
+            read_buf_str_.clear();
+        }
+        else
+        {
+            read_buf_str_ += c;
+        }
+    }
+
+    async_read_some_();
+}
+
+void SerialPort::on_receive_(const std::string &data)
+{
+    std::cout << "SerialPort::on_receive_() : " << data << std::endl;
+    std::cout.flush();
 }

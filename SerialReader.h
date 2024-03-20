@@ -8,7 +8,7 @@
 #include <QObject>
 #include <QtSerialPort//QtSerialPort>
 
-#include "XBeeDevice.h"
+#include "XBee/XBeeDevice.h"
 
 class SerialReader : public QObject
 {

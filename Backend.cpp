@@ -36,13 +36,15 @@ QSerialPortInfo getTargetPort()
 #endif
 
         if (!port.portName().contains("cu.") && port.manufacturer().contains("Digi"))
+        {
             targetPort = port;
+        }
     }
 
     return targetPort;
 }
 
-Backend::Backend(QObject *parent): QObject(parent)
+Backend::Backend(QObject *parent) : QObject(parent)
 {
     webServer = new WebServer(8001);
 
@@ -50,7 +52,7 @@ Backend::Backend(QObject *parent): QObject(parent)
 //    return;
     QSerialPortInfo targetPort = getTargetPort();
 
-    if(targetPort.isNull())
+    if (targetPort.isNull())
     {
         qDebug("Couldn't find radio module");
         exit(1);
@@ -65,6 +67,4 @@ Backend::Backend(QObject *parent): QObject(parent)
                                                           (const uint8_t *) str.toStdString().c_str(), str.length());
                                                           */
     serialReader->radioModule->sendNodeDiscoveryCommand();
-
-    connect(serialReader->radioModule, SIGNAL(dataReady(const uint8_t *, size_t)), webServer, SLOT(dataReady(const uint8_t *, size_t)));
 }

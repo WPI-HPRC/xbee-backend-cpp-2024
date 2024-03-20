@@ -28,8 +28,8 @@ find_package(Qt6 COMPONENTS
 add_executable(xbee_backend_cpp main.cpp
         SerialReader.cpp
         SerialReader.h
-        XBeeDevice.cpp
-        XBeeDevice.h
+        XBee/XBeeDevice.cpp
+        XBee/XBeeDevice.h
         Utility.h
         WebServer.cpp
         WebServer.h
@@ -41,7 +41,7 @@ add_executable(xbee_backend_cpp main.cpp
         DataLogger.cpp
         DataLogger.h
         Constants.h
-        XBeeUtility.h
+        XBee/XBeeUtility.h
         CircularBuffer.hpp)
 target_link_libraries(xbee_backend_cpp
         Qt::Core

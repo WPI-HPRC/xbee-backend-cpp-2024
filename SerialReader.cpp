@@ -39,7 +39,7 @@ SerialReader::SerialReader(const QSerialPortInfo &port, int baudRate, QObject *p
 
     std::cout.flush();
 
-    radioModule = new XBeeDevice(m_serialPort);
+    radioModule = new XBeeDevice();
 
     readTimer = new QTimer(this);
     connect(readTimer, SIGNAL(timeout()), this, SLOT(doCycle()));

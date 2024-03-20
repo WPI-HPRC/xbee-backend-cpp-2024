@@ -22,11 +22,13 @@ SerialReader::SerialReader(const QSerialPortInfo &port, int baudRate, QObject *p
 
     m_serialPort->setReadBufferSize(10000);
 
+
     if (m_serialPort->open(QIODevice::ReadWrite))
     {
         std::cout << "Opened serial port " << port.manufacturer().toStdString() << " - "
                   << port.portName().toStdString() << " at baud rate " << baudRate << "\n";
-        connectSignals();
+//        connectSignals();
+        m_serialPort->close();
     }
     else
     {
@@ -34,12 +36,13 @@ SerialReader::SerialReader(const QSerialPortInfo &port, int baudRate, QObject *p
         return;
     }
 
+
     qDebug() << "Read buffer size: " << m_serialPort->readBufferSize();
 
 
     std::cout.flush();
 
-    radioModule = new XBeeDevice();
+    radioModule = new RadioModule();
 
     readTimer = new QTimer(this);
     connect(readTimer, SIGNAL(timeout()), this, SLOT(doCycle()));

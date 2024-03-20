@@ -8,6 +8,9 @@
 
 #define DEBUG_SERIAL false
 
+#include <QSerialPort>
+#include <QSerialPortInfo>
+
 
 QSerialPortInfo getTargetPort()
 {
@@ -58,13 +61,7 @@ Backend::Backend(QObject *parent) : QObject(parent)
         exit(1);
     }
 
-
     serialReader = new SerialReader(targetPort, QSerialPort::Baud115200);
 
-    /*
-    QString str = "Hello, World!";
-    serialReader->radioModule->sendTransmitRequestCommand(0x0013A200423F474C,
-                                                          (const uint8_t *) str.toStdString().c_str(), str.length());
-                                                          */
     serialReader->radioModule->sendNodeDiscoveryCommand();
 }

@@ -4,6 +4,7 @@
 
 #ifndef XBEE_BACKEND_CPP_BACKEND_H
 #define XBEE_BACKEND_CPP_BACKEND_H
+
 #include <Qt>
 #include <QObject>
 
@@ -12,10 +13,11 @@
 #include "DataSimulator.h"
 #include "DataLogger.h"
 
-class Backend: public QObject
+class Backend : public QObject
 {
 public:
     explicit Backend(QObject *parent = nullptr);
+
     SerialReader *serialReader;
 
 private:
@@ -24,6 +26,7 @@ private:
     DataLogger *dataLogger;
 
 public slots:
+
     void run();
 
 };

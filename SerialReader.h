@@ -9,6 +9,7 @@
 #include <QtSerialPort//QtSerialPort>
 
 #include "XBee/XBeeDevice.h"
+#include "RadioModule.h"
 
 class SerialReader : public QObject
 {
@@ -17,7 +18,7 @@ Q_OBJECT
 public:
     SerialReader(const QSerialPortInfo &port, int baudRate, QObject *parent = nullptr);
 
-    XBeeDevice *radioModule;
+    RadioModule *radioModule;
 
 private:
     QSerialPort *m_serialPort;

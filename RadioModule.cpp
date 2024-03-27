@@ -7,44 +7,36 @@
 
 RadioModule::RadioModule() : XBeeDevice()
 {
-    serialPort.start("/dev/tty.usbserial-A28DMVHS", 115200);
-//    io_service.run();
-    startLoop();
-}
+    serialPort = new SerialPort();
+    serialPort->start("/dev/tty.usbserial-A28DMVHS", 115200);
+    std::cout << "Starting " << std::endl;
 
-void RadioModule::startLoop()
-{
-    boost::asio::deadline_timer timer(io_service, boost::posix_time::milliseconds(10));
-    timer.async_wait(boost::bind(&RadioModule::loop, this, boost::asio::placeholders::error));
-//    io_service.run();
-}
-
-void RadioModule::loop(const boost::system::error_code &error)
-{
-    if (!error)
-    {
-        std::cout << "Doing cycle";
-        doCycle();
-        startLoop(); // Restart the timer for the next iteration
-    }
-    else
-    {
-        std::cout << "Error: " << error;
-        // Handle error, if any
-    }
+    webServer = new WebServer(8001);
 }
 
 void RadioModule::serialWrite(const char *data, size_t length_bytes)
 {
-    serialPort.write_some(data, (int) length_bytes);
+    std::cout << "Writing" << std::endl;
+    serialPort->write_some(data, (int) length_bytes);
 }
 
-void RadioModule::serialRead(const char *buffer, size_t length_bytes)
+void RadioModule::packetRead()
 {
-//    serialPort.read_some(buffer, length_bytes);
+    serialPort->packetsNotYetRead -= 1;
 }
 
-void XBeeDevice::handleReceivePacket(XBee::ReceivePacket::Struct *frame)
+void RadioModule::serialRead(char *buffer, size_t length_bytes)
 {
+    serialPort->read(buffer, length_bytes);
+}
 
+void RadioModule::handleReceivePacket(XBee::ReceivePacket::Struct *frame)
+{
+//    std::cout << "Length: " << std::dec << frame->dataLength_bytes << std::endl;
+
+    auto *packet = (TelemPacket *) frame->data;
+
+    webServer->dataReady(frame->data, frame->dataLength_bytes);
+
+//    std::cout << "timestamp: " << std::dec << packet->timestamp << std::endl;
 }

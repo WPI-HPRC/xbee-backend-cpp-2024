@@ -9,40 +9,51 @@
 #include <QtWebSockets/QtWebSockets>
 #include "DataLogger.h"
 
-class WebSocket: public QObject
+class WebSocket : public QObject
 {
-    Q_OBJECT
+Q_OBJECT
+
 public:
     QWebSocket *socket;
-    explicit WebSocket(QWebSocket *socket): socket(socket)
+
+    explicit WebSocket(QWebSocket *socket) : socket(socket)
     {
-        connect(socket, SIGNAL(stateChanged(QAbstractSocket::SocketState)), this, SLOT(stateChanged(QAbstractSocket::SocketState)));
+        connect(socket, SIGNAL(stateChanged(QAbstractSocket::SocketState)), this,
+                SLOT(stateChanged(QAbstractSocket::SocketState)));
     }
+
 public slots:
+
     void stateChanged(QAbstractSocket::SocketState socketState)
     {
         emit stateChanged(this, socketState);
     };
 
 signals:
+
     void stateChanged(WebSocket *socket, QAbstractSocket::SocketState);
 };
 
-class WebServer: public QObject
+class WebServer : public QObject
 {
-    Q_OBJECT
+Q_OBJECT
 
 public:
     WebServer(int port, QObject *parent = nullptr);
+
     int port;
+
+    void dataReady(const uint8_t *data, size_t length_bytes);
 //    void sendFrame(QStrin)
 
 private:
     QWebSocketServer server;
-    QList<WebSocket *>clients;
+    QList<WebSocket *> clients;
     DataLogger dataLogger;
 
+
 public slots:
+
     void acceptError(QAbstractSocket::SocketError socketError);
 
     void alertReceived(QSsl::AlertLevel level, QSsl::AlertType type, const QString &description);
@@ -55,7 +66,6 @@ public slots:
 
     void serverError(QWebSocketProtocol::CloseCode closeCode);
 
-    void dataReady(const uint8_t *data, size_t length_bytes);
 
     void broadcast(const QString &str);
 

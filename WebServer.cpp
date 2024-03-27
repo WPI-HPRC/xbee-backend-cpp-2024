@@ -10,9 +10,9 @@
 
 #define connectHelper(method_signature) connect(&server, SIGNAL(method_signature), this, SLOT(method_signature))
 
-WebServer::WebServer(int port, QObject *parent): QObject(parent), port(port),
-                                                 server("Local Server",
-                                                        QWebSocketServer::NonSecureMode)
+WebServer::WebServer(int port, QObject *parent) : QObject(parent), port(port),
+                                                  server("Local Server",
+                                                         QWebSocketServer::NonSecureMode)
 {
     server.listen(QHostAddress::LocalHost, port);
 
@@ -51,7 +51,8 @@ void WebServer::newConnection()
 
     clients.append(newSocket);
 
-    connect(newSocket, SIGNAL(stateChanged(WebSocket *, QAbstractSocket::SocketState)), this, SLOT(clientStateChanged(WebSocket *, const QAbstractSocket::SocketState &)));
+    connect(newSocket, SIGNAL(stateChanged(WebSocket * , QAbstractSocket::SocketState)), this,
+            SLOT(clientStateChanged(WebSocket * , const QAbstractSocket::SocketState &)));
 
     QObject::connect(socket, &QWebSocket::errorOccurred,
                      [](QAbstractSocket::SocketError error)
@@ -83,7 +84,7 @@ void WebServer::serverError(QWebSocketProtocol::CloseCode closeCode)
 
 void WebServer::clientStateChanged(WebSocket *socket, const QAbstractSocket::SocketState &state)
 {
-    if(state == QAbstractSocket::UnconnectedState)
+    if (state == QAbstractSocket::UnconnectedState)
     {
         qDebug() << "Socket disconnected: " << socket->socket->peerAddress().toString();
         clients.remove(clients.indexOf(socket));
@@ -92,13 +93,14 @@ void WebServer::clientStateChanged(WebSocket *socket, const QAbstractSocket::Soc
 
 void WebServer::dataReady(const uint8_t *data, size_t length_bytes)
 {
-    auto *thePacket = (TelemPacket *)(data);
+    std::cout << "Data" << std::endl;
+    auto *thePacket = (TelemPacket *) (data);
 
     std::string json = JS::serializeStruct(*thePacket);
 
     dataLogger.dataReady(json.c_str());
 
-    for (auto socket : clients)
+    for (auto socket: clients)
     {
         socket->socket->sendTextMessage(json.c_str());
     }
@@ -106,7 +108,7 @@ void WebServer::dataReady(const uint8_t *data, size_t length_bytes)
 
 void WebServer::broadcast(const QString &str)
 {
-    for (WebSocket *client : clients)
+    for (WebSocket *client: clients)
     {
         client->socket->sendTextMessage(str);
     }

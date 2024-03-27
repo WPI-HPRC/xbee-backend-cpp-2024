@@ -47,9 +47,14 @@ bool SerialPort::start(const char *com_port_name, int baud_rate)
     port_->set_option(boost::asio::serial_port_base::parity(boost::asio::serial_port_base::parity::none));
     port_->set_option(boost::asio::serial_port_base::flow_control(boost::asio::serial_port_base::flow_control::none));
 
-    boost::thread t(boost::bind(&boost::asio::io_service::run, &io_service_));
+//    boost::thread t(boost::bind(&boost::asio::io_service::run, &io_service_));
+
+//    async_read_some_();
 
     async_read_some_();
+    std::thread t([this]()
+                  { this->io_service_.run(); });
+    thread_.swap(t);
 
     return true;
 }
@@ -65,6 +70,12 @@ void SerialPort::stop()
         port_->close();
         port_.reset();
     }
+
+    if (thread_.joinable())
+    {
+        thread_.join();
+    }
+
     io_service_.stop();
     io_service_.reset();
 }
@@ -90,12 +101,11 @@ void SerialPort::async_read_some_()
 {
     if (port_.get() == nullptr || !port_->is_open())
     {
-        std::cout << "Not getting";
+        std::cout << "Not getting" << std::endl;
         return;
     }
-    std::cout << "Getting";
-    std::cout.flush();
 
+//    std::cout << "Reading" << std::endl;
 
     port_->async_read_some(
             boost::asio::buffer(read_buf_raw_, SERIAL_PORT_READ_BUF_SIZE),
@@ -107,43 +117,96 @@ void SerialPort::async_read_some_()
 
 void SerialPort::on_receive_(const boost::system::error_code &ec, size_t bytes_transferred)
 {
-    std::cout << "On receive";
+//    std::cout << "Packets not yet read: " << packetsNotYetRead << std::endl;
     boost::mutex::scoped_lock look(mutex_);
 
     if (port_.get() == NULL || !port_->is_open())
     {
-        std::cout << "Not reading";
-        std::cout.flush();
+        std::cout << "Not reading" << std::endl;
         return;
     }
     if (ec)
     {
+        std::cout << "Error" << std::endl;
         async_read_some_();
-        std::cout << "EC";
-        std::cout.flush();
         return;
     }
 
-    std::cout << "Reading";
+//    std::cout << "Bytes transferred: " << std::dec << (int) bytes_transferred << std::endl;
+//    readQueue.push((uint8_t) bytes_transferred);
+
+    unsigned int n = 0;
     for (unsigned int i = 0; i < bytes_transferred; ++i)
     {
         char c = read_buf_raw_[i];
-        if (c == end_of_line_char_)
+
+        if (currentFrameBytesLeftToRead > 0 || c == XBee::StartDelimiter)
         {
-            this->on_receive_(read_buf_str_);
-            read_buf_str_.clear();
+            if (currentFrameBytesLeftToRead <= 0)
+            {
+                currentFrameByteIndex = 0;
+                currentFrameBytesLeftToRead = 3;
+//                std::cout << "Start delimiter" << std::endl;
+            }
+            else
+            {
+//                std::cout << "Already reading packet. Bytes left: " << std::dec << (int) currentFrameBytesLeftToRead
+//                          << std::endl;
+            }
+            for (n = i; n < bytes_transferred && currentFrameBytesLeftToRead > 0; n++)
+            {
+//                std::cout << "Current frame byte index: " << std::dec << (int) currentFrameByteIndex
+//                          << ", bytes left to read: " << (int) currentFrameBytesLeftToRead << std::endl;
+//
+//                std::cout << "Char: " << std::hex << (int) (read_buf_raw_[n] & 0xFF) << std::endl;
+
+                currentFrame[currentFrameByteIndex++] = (uint8_t) read_buf_raw_[n];
+
+                currentFrameBytesLeftToRead -= 1;
+
+                if (currentFrameByteIndex == 3)
+                {
+                    currentFrameBytesLeftToRead = currentFrame[2] + 1;
+//                    std::cout << "Length: " << std::dec << (int) currentFrame[2] << std::endl;
+                }
+            }
+            i = n;
         }
         else
         {
-            read_buf_str_ += c;
+//            std::cout << "No start delimiter: " << std::hex << (int) (c & 0xFF) << std::endl;
+        }
+        if (currentFrameBytesLeftToRead == 0)
+        {
+            for (int j = 0; j < currentFrame[2] + 4; j++)
+            {
+//                std::cout << "Adding " << std::hex << (int) (currentFrame[j] & 0xFF) << std::endl;
+                readQueue.push(currentFrame[j]);
+            }
+//            std::cout << "Added packet to readQueue" << std::endl;
+            packetsNotYetRead += 1;
+            currentFrameBytesLeftToRead = -1;
         }
     }
-
     async_read_some_();
 }
 
-void SerialPort::on_receive_(const std::string &data)
+void SerialPort::read(char *buffer, size_t length_bytes)
 {
-    std::cout << "SerialPort::on_receive_() : " << data << std::endl;
-    std::cout.flush();
+    if (readQueue.empty() || packetsNotYetRead == 0)
+    {
+        return;
+    }
+
+//    std::cout << "Trying to read " << (int) length_bytes << " bytes" << std::endl;
+//    std::cout << "Length"
+
+    for (int i = 0; i < length_bytes; i++)
+    {
+//        std::cout << "Sending " << std::hex << ((int) readQueue.front() & 0xFF) << std::endl;
+        buffer[i] = readQueue.front();
+        readQueue.pop();
+    }
+//    packetsNotYetRead -= 1;
+
 }

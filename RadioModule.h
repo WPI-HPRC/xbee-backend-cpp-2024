@@ -6,6 +6,7 @@
 #define XBEE_BACKEND_CPP_RADIOMODULE_H
 
 #include "XBee/XBeeDevice.h"
+#include "WebServer.h"
 #include "SerialPort.h"
 #include <boost/asio.hpp>
 
@@ -14,17 +15,19 @@ class RadioModule : public XBeeDevice
 public:
     RadioModule();
 
+    WebServer *webServer;
+
     boost::asio::io_service io_service;
 
-    void loop(const boost::system::error_code &error);
+    SerialPort *serialPort;
 
-    void startLoop();
-
-    SerialPort serialPort;
-
-    void serialRead(const char *buffer, size_t length_bytes) override;
+    void serialRead(char *buffer, size_t length_bytes) override;
 
     void serialWrite(const char *data, size_t length_bytes) override;
+
+    void packetRead() override;
+
+    void handleReceivePacket(XBee::ReceivePacket::Struct *frame) override;
 };
 
 

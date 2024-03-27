@@ -6,18 +6,21 @@
 #include <boost/system/system_error.hpp>
 #include <boost/bind.hpp>
 #include <boost/thread.hpp>
+#include <boost/circular_buffer.hpp>
+#include "XBee/XBeeUtility.h"
 
 #include <string>
 #include <vector>
+#include <queue>
 
 typedef boost::shared_ptr<boost::asio::serial_port> serial_port_ptr;
 
 #define SERIAL_PORT_READ_BUF_SIZE 256
+#define CIRCULAR_BUFFER_LENGTH 65536
 
 class SerialPort
 {
 protected:
-    boost::asio::io_service io_service_;
     serial_port_ptr port_;
     boost::mutex mutex_;
 
@@ -26,15 +29,30 @@ protected:
 
     char end_of_line_char_;
 
+
 private:
     SerialPort(const SerialPort &p);
 
     SerialPort &operator=(const SerialPort &p);
 
-public:
-    SerialPort(void);
+    std::thread thread_;
 
-    virtual ~SerialPort(void);
+    std::queue<uint8_t> readQueue;
+
+
+    boost::asio::io_service io_service_;
+
+    int currentFrameBytesLeftToRead = -1;
+
+    uint8_t currentFrame[XBee::MaxFrameBytes];
+
+    uint8_t currentFrameByteIndex;
+
+public:
+
+    SerialPort();
+
+    virtual ~SerialPort();
 
     char end_of_line_char() const;
 
@@ -50,11 +68,13 @@ public:
 
     void read_some(const char *buffer, size_t size_bytes);
 
+    void read(char *buffer, size_t length_bytes);
+
+    int packetsNotYetRead = 0;
+
 protected:
     virtual void async_read_some_();
 
     virtual void on_receive_(const boost::system::error_code &ec, size_t bytes_transferred);
-
-    virtual void on_receive_(const std::string &data);
 
 };

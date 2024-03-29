@@ -6,9 +6,12 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(BOOST_ROOT /usr/local/Cellar/boost/1.80.0)
-set(BOOST_INCLUDEDIR /usr/local/Cellar/boost/1.80.0/include)
-set(BOOST_LIBRARY_DIR /usr/local/Cellar/boost/1.80.0/lib)
+if (APPLE)
+    set(BOOST_ROOT /usr/local/Cellar/boost/1.80.0) # Use "brew install boost"
+endif ()
+
+set(BOOST_INCLUDEDIR "${BOOST_ROOT}/include")
+set(BOOST_LIBRARY_DIR "${BOOST_ROOT}/lib")
 
 find_package(Boost 1.80.0 COMPONENTS system filesystem thread REQUIRED)
 

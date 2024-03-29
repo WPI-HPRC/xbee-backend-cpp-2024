@@ -45,7 +45,8 @@ add_executable(xbee_backend_cpp main.cpp
         RadioModule.cpp
         RadioModule.h
         SerialPort.cpp
-        SerialPort.h)
+        SerialPort.h
+        circularQueue.hpp)
 
 target_link_libraries(xbee_backend_cpp
         Qt::Core

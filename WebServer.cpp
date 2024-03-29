@@ -93,7 +93,6 @@ void WebServer::clientStateChanged(WebSocket *socket, const QAbstractSocket::Soc
 
 void WebServer::dataReady(const uint8_t *data, size_t length_bytes)
 {
-    std::cout << "Data" << std::endl;
     auto *thePacket = (TelemPacket *) (data);
 
     std::string json = JS::serializeStruct(*thePacket);

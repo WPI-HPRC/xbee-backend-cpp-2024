@@ -21,7 +21,7 @@ public:
 
     SerialPort *serialPort;
 
-    void serialRead(char *buffer, size_t length_bytes) override;
+    void serialRead(uint8_t *buffer, size_t length_bytes) override;
 
     void serialWrite(const char *data, size_t length_bytes) override;
 

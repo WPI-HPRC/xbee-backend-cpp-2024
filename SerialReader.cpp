@@ -12,7 +12,7 @@
 RadioModule *SerialReader::radioModule = nullptr;
 
 boost::asio::io_service io_service;
-boost::posix_time::milliseconds interval(30);  // 1 second
+boost::posix_time::milliseconds interval(5);  // 1 second
 boost::asio::deadline_timer timer(io_service, interval);
 
 void tick(const boost::system::error_code & /*e*/)

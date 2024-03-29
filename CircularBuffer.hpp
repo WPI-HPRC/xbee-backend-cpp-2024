@@ -7,14 +7,13 @@
 
 #include <cstdlib>
 #include <cstring>
-#include "qdebug.h"
 
 #define CIRCULAR_BUFFER_LEN 10
 
 typedef struct
 {
     unsigned int length;
-    int dataSize_bytes;
+    unsigned int dataSize_bytes;
     uint8_t *dataPtr;
     uint8_t *data;
 } SerialCircularBuffer;
@@ -52,7 +51,6 @@ inline void serialCircularBufferAdd(SerialCircularBuffer *buffer, uint8_t *data,
     if (buffer->dataPtr == &buffer->data[buffer->length - 1])
     {
         buffer->dataPtr = &buffer->data[0];
-        qDebug() << "Going back around";
     }
     else
     {

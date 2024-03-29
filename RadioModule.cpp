@@ -25,8 +25,9 @@ void RadioModule::packetRead()
     serialPort->packetsNotYetRead -= 1;
 }
 
-void RadioModule::serialRead(char *buffer, size_t length_bytes)
+void RadioModule::serialRead(uint8_t *buffer, size_t length_bytes)
 {
+//    std::cout << "Radio module is trying to read " << std::dec << (int) length_bytes << " bytes" << std::endl;
     serialPort->read(buffer, length_bytes);
 }
 
@@ -37,6 +38,5 @@ void RadioModule::handleReceivePacket(XBee::ReceivePacket::Struct *frame)
     auto *packet = (TelemPacket *) frame->data;
 
     webServer->dataReady(frame->data, frame->dataLength_bytes);
-
 //    std::cout << "timestamp: " << std::dec << packet->timestamp << std::endl;
 }

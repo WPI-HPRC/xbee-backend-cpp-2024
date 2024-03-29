@@ -9,9 +9,7 @@
 #include <boost/circular_buffer.hpp>
 #include "XBee/XBeeUtility.h"
 
-#include <string>
-#include <vector>
-#include <queue>
+#include "circularQueue.hpp"
 
 typedef boost::shared_ptr<boost::asio::serial_port> serial_port_ptr;
 
@@ -25,10 +23,8 @@ protected:
     boost::mutex mutex_;
 
     char read_buf_raw_[SERIAL_PORT_READ_BUF_SIZE];
-    std::string read_buf_str_;
 
     char end_of_line_char_;
-
 
 private:
     SerialPort(const SerialPort &p);
@@ -37,8 +33,7 @@ private:
 
     std::thread thread_;
 
-    std::queue<uint8_t> readQueue;
-
+    CircularQueue<uint8_t> *readQueue;
 
     boost::asio::io_service io_service_;
 
@@ -68,7 +63,7 @@ public:
 
     void read_some(const char *buffer, size_t size_bytes);
 
-    void read(char *buffer, size_t length_bytes);
+    void read(uint8_t *buffer, size_t length_bytes);
 
     int packetsNotYetRead = 0;
 

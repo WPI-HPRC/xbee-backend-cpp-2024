@@ -4,6 +4,7 @@
 
 SerialPort::SerialPort(void) : end_of_line_char_('\n')
 {
+    readQueue = serialCircularQueueCreate<uint8_t>(65536);
 }
 
 SerialPort::~SerialPort(void)
@@ -46,10 +47,6 @@ bool SerialPort::start(const char *com_port_name, int baud_rate)
     port_->set_option(boost::asio::serial_port_base::stop_bits(boost::asio::serial_port_base::stop_bits::one));
     port_->set_option(boost::asio::serial_port_base::parity(boost::asio::serial_port_base::parity::none));
     port_->set_option(boost::asio::serial_port_base::flow_control(boost::asio::serial_port_base::flow_control::none));
-
-//    boost::thread t(boost::bind(&boost::asio::io_service::run, &io_service_));
-
-//    async_read_some_();
 
     async_read_some_();
     std::thread t([this]()
@@ -181,7 +178,7 @@ void SerialPort::on_receive_(const boost::system::error_code &ec, size_t bytes_t
             for (int j = 0; j < currentFrame[2] + 4; j++)
             {
 //                std::cout << "Adding " << std::hex << (int) (currentFrame[j] & 0xFF) << std::endl;
-                readQueue.push(currentFrame[j]);
+                serialCircularBufferAdd(readQueue, currentFrame[j]);
             }
 //            std::cout << "Added packet to readQueue" << std::endl;
             packetsNotYetRead += 1;
@@ -191,22 +188,18 @@ void SerialPort::on_receive_(const boost::system::error_code &ec, size_t bytes_t
     async_read_some_();
 }
 
-void SerialPort::read(char *buffer, size_t length_bytes)
+void SerialPort::read(uint8_t *buffer, size_t length_bytes)
 {
-    if (readQueue.empty() || packetsNotYetRead == 0)
+    if (packetsNotYetRead == 0)
     {
+//        std::cout << "Not reading" << std::endl;
         return;
     }
 
 //    std::cout << "Trying to read " << (int) length_bytes << " bytes" << std::endl;
 //    std::cout << "Length"
 
-    for (int i = 0; i < length_bytes; i++)
-    {
-//        std::cout << "Sending " << std::hex << ((int) readQueue.front() & 0xFF) << std::endl;
-        buffer[i] = readQueue.front();
-        readQueue.pop();
-    }
+    serialCircularQueueRead(readQueue, buffer, length_bytes);
 //    packetsNotYetRead -= 1;
 
 }

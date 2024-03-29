@@ -2,12 +2,8 @@
 // Created by William Scheirey on 3/29/24.
 //
 
-#ifndef XBEE_BACKEND_CPP_CIRCULARQUEUE_HPP
-#define XBEE_BACKEND_CPP_CIRCULARQUEUE_HPP
-
-#include <cstdlib>
-#include <cstring>
-#include <iostream>
+#ifndef HPRC_CIRCULARQUEUE_HPP
+#define HPRC_CIRCULARQUEUE_HPP
 
 template<typename T>
 
@@ -21,34 +17,28 @@ struct CircularQueue
 };
 
 template<typename T>
-inline CircularQueue<T> *serialCircularQueueCreate(unsigned int length)
+inline CircularQueue<T> *circularQueueCreate(unsigned int length)
 {
     auto *buffer = (CircularQueue<T> *) malloc(sizeof(CircularQueue<T>));
 
     buffer->length = length;
     buffer->dataSize_bytes = sizeof(T);
 
-    buffer->data = (uint8_t *) malloc(length * buffer->dataSize_bytes);
+    buffer->data = (T *) malloc(length * buffer->dataSize_bytes);
 
     buffer->dataPtr = &buffer->data[0];
     buffer->readPtr = buffer->dataPtr;
-
-    std::cout << "Created circular queue with length " << std::dec << (int) buffer->length << " and data size = "
-              << (int) buffer->dataSize_bytes << " bytes" << std::endl;
 
     return buffer;
 }
 
 template<typename T>
-inline void serialCircularQueueRead(CircularQueue<T> *queue, T *outBuffer, unsigned int length)
+inline void circularQueueRead(CircularQueue<T> *queue, T *outBuffer, unsigned int length)
 {
     unsigned int length_bytes = length * queue->dataSize_bytes;
 
-//    std::cout << "Attempting to read " << std::dec << (int) length_bytes << " bytes" << std::endl;
-
     if (queue->data + queue->length - queue->readPtr > length_bytes)
     {
-//        std::cout << "Not at end of buffer. Read ptr = " << std::hex << (int) (*queue->readPtr & 0xFF) << std::endl;
         memcpy(outBuffer, queue->readPtr, length_bytes);
         queue->readPtr += length_bytes;
     }
@@ -65,10 +55,8 @@ inline void serialCircularQueueRead(CircularQueue<T> *queue, T *outBuffer, unsig
 
 
 template<typename T>
-inline void serialCircularBufferAdd(CircularQueue<T> *buffer, T data)
+inline void circularQueueAdd(CircularQueue<T> *buffer, T data)
 {
-//    std::cout << "Adding " << std::hex << (int) (data & 0xFF)
-//              << std::endl;
     *buffer->dataPtr = data;
     if (buffer->dataPtr == &buffer->data[buffer->length - 1])
     {
@@ -80,4 +68,4 @@ inline void serialCircularBufferAdd(CircularQueue<T> *buffer, T data)
     }
 }
 
-#endif //XBEE_BACKEND_CPP_CIRCULARQUEUE_HPP
+#endif //HPRC_CIRCULARQUEUE_HPP

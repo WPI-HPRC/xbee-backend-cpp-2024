@@ -4,7 +4,7 @@
 
 SerialPort::SerialPort(void) : end_of_line_char_('\n')
 {
-    readQueue = serialCircularQueueCreate<uint8_t>(65536);
+    readQueue = circularQueueCreate<uint8_t>(65536);
 }
 
 SerialPort::~SerialPort(void)
@@ -178,7 +178,7 @@ void SerialPort::on_receive_(const boost::system::error_code &ec, size_t bytes_t
             for (int j = 0; j < currentFrame[2] + 4; j++)
             {
 //                std::cout << "Adding " << std::hex << (int) (currentFrame[j] & 0xFF) << std::endl;
-                serialCircularBufferAdd(readQueue, currentFrame[j]);
+                circularQueueAdd(readQueue, currentFrame[j]);
             }
 //            std::cout << "Added packet to readQueue" << std::endl;
             packetsNotYetRead += 1;
@@ -199,7 +199,7 @@ void SerialPort::read(uint8_t *buffer, size_t length_bytes)
 //    std::cout << "Trying to read " << (int) length_bytes << " bytes" << std::endl;
 //    std::cout << "Length"
 
-    serialCircularQueueRead(readQueue, buffer, length_bytes);
+    circularQueueRead(readQueue, buffer, length_bytes);
 //    packetsNotYetRead -= 1;
 
 }

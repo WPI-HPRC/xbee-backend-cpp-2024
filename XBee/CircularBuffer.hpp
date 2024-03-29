@@ -2,13 +2,11 @@
 // Created by William Scheirey on 3/18/24.
 //
 
-#ifndef XBEE_BACKEND_CPP_CIRCULARBUFFER_HPP
-#define XBEE_BACKEND_CPP_CIRCULARBUFFER_HPP
+#ifndef HPRC_CIRCULARBUFFER_HPP
+#define HPRC_CIRCULARBUFFER_HPP
 
 #include <cstdlib>
 #include <cstring>
-
-#define CIRCULAR_BUFFER_LEN 10
 
 typedef struct
 {
@@ -16,23 +14,23 @@ typedef struct
     unsigned int dataSize_bytes;
     uint8_t *dataPtr;
     uint8_t *data;
-} SerialCircularBuffer;
+} CircularBuffer;
 
 
-inline uint8_t *serialCircularBufferGetValueAtIndex(SerialCircularBuffer *buffer, int index)
+inline uint8_t *circularBufferGetValueAtIndex(CircularBuffer *buffer, int index)
 {
     return &(buffer->data[((buffer->dataPtr - buffer->data) + index * buffer->dataSize_bytes) %
                           (buffer->length * buffer->dataSize_bytes)]);
 }
 
-inline uint8_t *serialCircularBufferGetLastValue(SerialCircularBuffer *buffer)
+inline uint8_t *circularBufferGetLastValue(CircularBuffer *buffer)
 {
-    return serialCircularBufferGetValueAtIndex(buffer, -1);
+    return circularBufferGetValueAtIndex(buffer, -1);
 }
 
-inline SerialCircularBuffer *serialCircularBufferCreate(unsigned int length, unsigned int dataSize_bytes)
+inline CircularBuffer *circularBufferCreate(unsigned int length, unsigned int dataSize_bytes)
 {
-    auto *buffer = (SerialCircularBuffer *) malloc(dataSize_bytes * length);
+    auto *buffer = (CircularBuffer *) malloc(dataSize_bytes * length);
 
     buffer->length = length;
     buffer->dataSize_bytes = dataSize_bytes;
@@ -44,7 +42,7 @@ inline SerialCircularBuffer *serialCircularBufferCreate(unsigned int length, uns
     return buffer;
 }
 
-inline void serialCircularBufferAdd(SerialCircularBuffer *buffer, uint8_t *data, size_t length_bytes)
+inline void circularBufferAdd(CircularBuffer *buffer, uint8_t *data, size_t length_bytes)
 {
     memcpy(buffer->dataPtr, data, length_bytes);
 
@@ -58,4 +56,4 @@ inline void serialCircularBufferAdd(SerialCircularBuffer *buffer, uint8_t *data,
     }
 }
 
-#endif //XBEE_BACKEND_CPP_CIRCULARBUFFER_HPP
+#endif //HPRC_CIRCULARBUFFER_HPP

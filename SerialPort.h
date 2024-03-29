@@ -24,8 +24,6 @@ protected:
 
     char read_buf_raw_[SERIAL_PORT_READ_BUF_SIZE];
 
-    char end_of_line_char_;
-
 private:
     SerialPort(const SerialPort &p);
 
@@ -41,7 +39,7 @@ private:
 
     uint8_t currentFrame[XBee::MaxFrameBytes];
 
-    uint8_t currentFrameByteIndex;
+    uint8_t currentFrameByteIndex = 0;
 
 public:
 
@@ -49,19 +47,11 @@ public:
 
     virtual ~SerialPort();
 
-    char end_of_line_char() const;
+    bool start(const char *com_port_name, int baud_rate = 9600);
 
-    void end_of_line_char(const char &c);
-
-    virtual bool start(const char *com_port_name, int baud_rate = 9600);
-
-    virtual void stop();
-
-    int write_some(const std::string &buf);
+    void stop();
 
     int write_some(const char *buf, const int &size);
-
-    void read_some(const char *buffer, size_t size_bytes);
 
     void read(uint8_t *buffer, size_t length_bytes);
 

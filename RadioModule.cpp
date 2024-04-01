@@ -32,7 +32,12 @@ void RadioModule::serialRead(uint8_t *buffer, size_t length_bytes)
 
 void RadioModule::handleReceivePacket(XBee::ReceivePacket::Struct *frame)
 {
-    auto *packet = (TelemPacket *) frame->data;
-
     webServer->dataReady(frame->data, frame->dataLength_bytes);
 }
+
+void RadioModule::handleReceivePacket64Bit(XBee::ReceivePacket64Bit::Struct *frame)
+{
+    std::cout << "RSSI: -" << std::dec << frame->negativeRssi << "dbm" << std::endl;
+    webServer->dataReady(frame->data, frame->dataLength_bytes);
+}
+

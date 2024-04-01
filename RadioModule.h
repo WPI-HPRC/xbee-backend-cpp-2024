@@ -28,6 +28,9 @@ public:
     void packetRead() override;
 
     void handleReceivePacket(XBee::ReceivePacket::Struct *frame) override;
+
+    void handleReceivePacket64Bit(XBee::ReceivePacket64Bit::Struct *frame) override;
+
 };
 
 

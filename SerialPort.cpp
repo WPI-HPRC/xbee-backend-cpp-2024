@@ -143,7 +143,7 @@ void SerialPort::on_receive_(const boost::system::error_code &ec, size_t bytes_t
         {
             for (int j = 0; j < currentFrame[2] + 4; j++)
             {
-                circularQueueAdd(readQueue, currentFrame[j]);
+                circularQueuePush(readQueue, currentFrame[j]);
             }
             packetsNotYetRead += 1;
             currentFrameBytesLeftToRead = -1;
@@ -159,5 +159,5 @@ void SerialPort::read(uint8_t *buffer, size_t length_bytes)
         return;
     }
 
-    circularQueueRead(readQueue, buffer, length_bytes);
+    circularQueuePop(readQueue, buffer, length_bytes);
 }

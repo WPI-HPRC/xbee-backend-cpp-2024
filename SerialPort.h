@@ -47,7 +47,7 @@ public:
 
     virtual ~SerialPort();
 
-    bool start(const char *com_port_name, int baud_rate = 9600);
+    bool start(const char *com_port_name, int baud_rate);
 
     void stop();
 

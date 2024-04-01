@@ -58,7 +58,7 @@ RadioModule::RadioModule() : XBeeDevice()
     }
 
     // yuck
-    serialPort->start(getTargetPort().portName().toStdString().c_str(), 115200);
+    serialPort->start(getTargetPort().systemLocation().toStdString().c_str(), 115200);
     std::cout << "Starting " << std::endl;
 
     webServer = new WebServer(8001);
@@ -87,7 +87,7 @@ void RadioModule::handleReceivePacket(XBee::ReceivePacket::Struct *frame)
 
 void RadioModule::handleReceivePacket64Bit(XBee::ReceivePacket64Bit::Struct *frame)
 {
-    std::cout << "RSSI: -" << std::dec << frame->negativeRssi << "dbm" << std::endl;
+    std::cout << "RSSI: -" << std::dec << (int) (frame->negativeRssi & 0xFF) << "dbm" << std::endl;
     webServer->dataReady(frame->data, frame->dataLength_bytes);
 }
 

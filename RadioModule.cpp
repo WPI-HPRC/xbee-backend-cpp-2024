@@ -5,10 +5,60 @@
 #include "RadioModule.h"
 #include <iostream>
 
+#include <QSerialPort>
+#include <QSerialPortInfo>
+
+#define DEBUG_SERIAL false
+
+QSerialPortInfo getTargetPort()
+{
+    QList serialPorts = QSerialPortInfo::availablePorts();
+
+    QSerialPortInfo targetPort;
+
+#if DEBUG_SERIAL
+    std::cout << "Available baud rates: \n";
+    for(auto &baudRate : QSerialPortInfo::standardBaudRates())
+    {
+        std::cout << "\t" << baudRate << "\n";
+    }
+
+    std::cout << "\nFound serial ports: \n";
+#endif
+
+    for (auto &port: serialPorts)
+    {
+#if DEBUG_SERIAL
+        std::cout << "\n" << port.portName().toStdString() << "\n";
+        std::cout << "\tManufacturer: " << port.manufacturer().toStdString() << "\n";
+        std::cout << "\tSystem location: " << port.systemLocation().toStdString() << "\n";
+        std::cout << "\tSerial number: " << port.serialNumber().toStdString() << "\n";
+        std::cout.flush();
+#endif
+
+        if (!port.portName().contains("cu.") && port.manufacturer().contains("Digi"))
+        {
+            targetPort = port;
+        }
+    }
+
+    return targetPort;
+}
+
 RadioModule::RadioModule() : XBeeDevice()
 {
     serialPort = new SerialPort();
-    serialPort->start("/dev/tty.usbserial-A28DMVHS", 115200);
+
+    QSerialPortInfo targetPort = getTargetPort();
+
+    if (targetPort.isNull())
+    {
+        qDebug() << "Couldn't find radio module";
+        exit(1);
+    }
+
+    // yuck
+    serialPort->start(getTargetPort().portName().toStdString().c_str(), 115200);
     std::cout << "Starting " << std::endl;
 
     webServer = new WebServer(8001);

@@ -21,15 +21,19 @@ public:
 
     SerialPort *serialPort;
 
-    void serialRead(uint8_t *buffer, size_t length_bytes) override;
+    void readBytes(uint8_t *buffer, size_t length_bytes) override;
 
-    void serialWrite(const char *data, size_t length_bytes) override;
+    void writeBytes(const char *data, size_t length_bytes) override;
 
     void packetRead() override;
 
     void handleReceivePacket(XBee::ReceivePacket::Struct *frame) override;
 
     void handleReceivePacket64Bit(XBee::ReceivePacket64Bit::Struct *frame) override;
+
+    void start() override;
+
+    void incorrectChecksum(uint8_t calculated, uint8_t received) override;
 
 };
 

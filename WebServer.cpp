@@ -49,6 +49,8 @@ void WebServer::newConnection()
 
     auto *newSocket = new WebSocket(socket);
 
+    connect(this, SIGNAL(broadcast(const QString &)), newSocket, SLOT(sendData(const QString &)));
+
     clients.append(newSocket);
 
     connect(newSocket, SIGNAL(stateChanged(WebSocket * , QAbstractSocket::SocketState)), this,
@@ -99,16 +101,5 @@ void WebServer::dataReady(const uint8_t *data, size_t length_bytes)
 
     dataLogger.dataReady(json.c_str());
 
-    for (auto socket: clients)
-    {
-        socket->socket->sendTextMessage(json.c_str());
-    }
-}
-
-void WebServer::broadcast(const QString &str)
-{
-    for (WebSocket *client: clients)
-    {
-        client->socket->sendTextMessage(str);
-    }
+    emit broadcast(json.c_str());
 }

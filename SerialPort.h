@@ -8,13 +8,13 @@
 #include <boost/thread.hpp>
 #include <boost/circular_buffer.hpp>
 #include "XBee/XBeeUtility.h"
+#include "QFile"
 
 #include "XBee/circularQueue.hpp"
 
 typedef boost::shared_ptr<boost::asio::serial_port> serial_port_ptr;
 
-#define SERIAL_PORT_READ_BUF_SIZE 256
-#define CIRCULAR_BUFFER_LENGTH 65536
+#define SERIAL_PORT_READ_BUF_SIZE 65536
 
 class SerialPort
 {
@@ -56,6 +56,8 @@ public:
     void read(uint8_t *buffer, size_t length_bytes);
 
     int packetsNotYetRead = 0;
+
+    QFile *logFile;
 
 protected:
     virtual void async_read_some_();

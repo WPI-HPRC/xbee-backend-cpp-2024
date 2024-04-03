@@ -20,6 +20,8 @@ public:
     {
         connect(socket, SIGNAL(stateChanged(QAbstractSocket::SocketState)), this,
                 SLOT(stateChanged(QAbstractSocket::SocketState)));
+
+
     }
 
 public slots:
@@ -27,6 +29,11 @@ public slots:
     void stateChanged(QAbstractSocket::SocketState socketState)
     {
         emit stateChanged(this, socketState);
+    };
+
+    void sendData(const QString &data)
+    {
+        socket->sendTextMessage(data);
     };
 
 signals:
@@ -66,11 +73,11 @@ public slots:
 
     void serverError(QWebSocketProtocol::CloseCode closeCode);
 
-
-    void broadcast(const QString &str);
-
     void clientStateChanged(WebSocket *socket, const QAbstractSocket::SocketState &state);
 
+signals:
+
+    void broadcast(const QString &str);
 
 };
 

@@ -59,12 +59,17 @@ RadioModule::RadioModule() : XBeeDevice()
 
     // yuck
     serialPort->start(getTargetPort().systemLocation().toStdString().c_str(), 115200);
-    std::cout << "Starting " << std::endl;
+//    std::cout << "Starting " << std::endl;
 
     webServer = new WebServer(8001);
 }
 
-void RadioModule::serialWrite(const char *data, size_t length_bytes)
+void RadioModule::start()
+{
+    // Do nothing (only need this for SPI)
+}
+
+void RadioModule::writeBytes(const char *data, size_t length_bytes)
 {
     std::cout << "Writing" << std::endl;
     serialPort->write_some(data, (int) length_bytes);
@@ -75,19 +80,28 @@ void RadioModule::packetRead()
     serialPort->packetsNotYetRead -= 1;
 }
 
-void RadioModule::serialRead(uint8_t *buffer, size_t length_bytes)
+void RadioModule::readBytes(uint8_t *buffer, size_t length_bytes)
 {
     serialPort->read(buffer, length_bytes);
 }
 
 void RadioModule::handleReceivePacket(XBee::ReceivePacket::Struct *frame)
 {
+//    return;
     webServer->dataReady(frame->data, frame->dataLength_bytes);
 }
 
 void RadioModule::handleReceivePacket64Bit(XBee::ReceivePacket64Bit::Struct *frame)
 {
-    std::cout << "RSSI: -" << std::dec << (int) (frame->negativeRssi & 0xFF) << "dbm" << std::endl;
+//    return;
+//    std::cout << "RSSI: -" << std::dec << (int) (frame->negativeRssi & 0xFF) << "dbm\n";
     webServer->dataReady(frame->data, frame->dataLength_bytes);
+}
+
+void RadioModule::incorrectChecksum(uint8_t calculated, uint8_t received)
+{
+    std::string str = QString::asprintf("\nWRONG CHECKSUM. calculated: %02x, received: %02x\n", calculated & 0xFF,
+                                        received & 0xFF).toStdString();
+    serialPort->logFile->write(str.c_str(), (qint64) str.length());
 }
 

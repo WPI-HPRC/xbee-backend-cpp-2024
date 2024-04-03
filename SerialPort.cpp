@@ -5,6 +5,9 @@
 SerialPort::SerialPort()
 {
     readQueue = circularQueueCreate<uint8_t>(65536);
+    logFile = new QFile("/Users/will/Desktop/log.txt");
+
+    logFile->open(QIODeviceBase::WriteOnly);
 }
 
 SerialPort::~SerialPort()
@@ -117,6 +120,12 @@ void SerialPort::on_receive_(const boost::system::error_code &ec, size_t bytes_t
     {
         char c = read_buf_raw_[i];
 
+        if (!(currentFrameBytesLeftToRead > 0 || c == XBee::StartDelimiter))
+        {
+            std::string str = QString::asprintf("%02x\n", c & 0xFF).toStdString();
+            logFile->write(str.c_str(), (qint64) str.length());
+        }
+
         if (currentFrameBytesLeftToRead > 0 || c == XBee::StartDelimiter)
         {
             if (currentFrameBytesLeftToRead <= 0)
@@ -125,9 +134,12 @@ void SerialPort::on_receive_(const boost::system::error_code &ec, size_t bytes_t
                 currentFrameBytesLeftToRead = 3;
             }
 
-            for (n = i; n < bytes_transferred && currentFrameBytesLeftToRead > 0; n++)
+            for (i; i < bytes_transferred && currentFrameBytesLeftToRead > 0; i++)
             {
-                currentFrame[currentFrameByteIndex++] = (uint8_t) read_buf_raw_[n];
+                currentFrame[currentFrameByteIndex++] = (uint8_t) read_buf_raw_[i];
+
+                std::string str = QString::asprintf("%02x ", read_buf_raw_[i] & 0xFF).toStdString();
+                logFile->write(str.c_str(), (qint64) str.length());
 
                 currentFrameBytesLeftToRead -= 1;
 
@@ -136,7 +148,6 @@ void SerialPort::on_receive_(const boost::system::error_code &ec, size_t bytes_t
                     currentFrameBytesLeftToRead = currentFrame[2] + 1;
                 }
             }
-            i = n;
         }
 
         if (currentFrameBytesLeftToRead == 0)
@@ -147,8 +158,16 @@ void SerialPort::on_receive_(const boost::system::error_code &ec, size_t bytes_t
             }
             packetsNotYetRead += 1;
             currentFrameBytesLeftToRead = -1;
+            logFile->write("\n", 1);
+
+            i -= 1; // Subtract 1 because i will be incremented at the end of this iteration of the for loop
+
+//            std::string str = QString::asprintf("\n\nLAST BYTE: %02x\n", read_buf_raw_[i] & 0xFF).toStdString();
+//            logFile->write(str.c_str(), (qint64) str.length());
         }
     }
+
+    logFile->flush();
     async_read_some_();
 }
 

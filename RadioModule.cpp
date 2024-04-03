@@ -62,6 +62,10 @@ RadioModule::RadioModule() : XBeeDevice()
 //    std::cout << "Starting " << std::endl;
 
     webServer = new WebServer(8001);
+
+    queryParameter(XBee::AtCommand::NodeDiscoveryBackoff);
+//    queryParameter(XBee::AtCommand::NodeDiscoveryOptions);
+
 }
 
 void RadioModule::start()

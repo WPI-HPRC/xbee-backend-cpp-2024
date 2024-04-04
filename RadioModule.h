@@ -5,7 +5,7 @@
 #ifndef XBEE_BACKEND_CPP_RADIOMODULE_H
 #define XBEE_BACKEND_CPP_RADIOMODULE_H
 
-#include "XBee/XBeeDevice.h"
+#include "xbee/XBeeDevice.h"
 #include "WebServer.h"
 #include "SerialPort.h"
 #include <boost/asio.hpp>
@@ -35,6 +35,7 @@ public:
 
     void incorrectChecksum(uint8_t calculated, uint8_t received) override;
 
+    void log(const char *format, ...) override;
 };
 
 

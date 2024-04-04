@@ -7,10 +7,10 @@
 #include <boost/bind.hpp>
 #include <boost/thread.hpp>
 #include <boost/circular_buffer.hpp>
-#include "XBee/XBeeUtility.h"
+#include "xbee/XBeeUtility.h"
 #include "QFile"
 
-#include "XBee/circularQueue.hpp"
+#include "xbee/circularQueue.hpp"
 
 typedef boost::shared_ptr<boost::asio::serial_port> serial_port_ptr;
 

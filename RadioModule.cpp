@@ -65,7 +65,7 @@ RadioModule::RadioModule() : XBeeDevice()
     queryParameter(XBee::AtCommand::NodeDiscoveryOptions);
     queryParameter(XBee::AtCommand::NodeDiscoveryBackoff);
 
-    setParameter(XBee::AtCommand::NodeDiscoveryBackoff, 30);
+    setParameter(XBee::AtCommand::NodeDiscoveryBackoff, 0x30);
     queryParameter(XBee::AtCommand::NodeDiscoveryBackoff);
 }
 
@@ -115,5 +115,14 @@ void RadioModule::incorrectChecksum(uint8_t calculated, uint8_t received)
     std::string str = QString::asprintf("\nWRONG CHECKSUM. calculated: %02x, received: %02x\n", calculated & 0xFF,
                                         received & 0xFF).toStdString();
     serialPort->logFile->write(str.c_str(), (qint64) str.length());
+}
+
+void RadioModule::log(const char *format, ...)
+{
+    va_list args;
+    va_start(args, format);
+
+    vprintf(format, args);
+    va_end(args);
 }
 

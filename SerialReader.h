@@ -6,7 +6,7 @@
 #define XBEE_BACKEND_CPP_SERIALREADER_H
 
 #include <boost/asio.hpp>
-#include "XBee/XBeeDevice.h"
+#include "xbee/XBeeDevice.h"
 #include "RadioModule.h"
 #include <thread>
 

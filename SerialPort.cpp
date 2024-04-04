@@ -85,13 +85,6 @@ int SerialPort::write_some(const char *buf, const int &size)
         return 0;
     }
 
-    std::cout << "Writing ";
-    for (int i = 0; i < size; i++)
-    {
-        std::cout << std::hex << (int) (buf[i] & 0xFF) << " ";
-    }
-    std::cout << std::endl;
-
     int bytes_written = (int) port_->write_some(boost::asio::buffer(buf, size), ec);
 
     return bytes_written;

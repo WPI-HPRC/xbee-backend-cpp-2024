@@ -75,11 +75,26 @@ int SerialPort::write_some(const char *buf, const int &size)
     boost::system::error_code ec;
 
     if (!port_)
-    { return -1; }
+    {
+        std::cout << "No port!" << std::endl;
+        return -1;
+    }
     if (size == 0)
-    { return 0; }
+    {
+        std::cout << "Can't write 0 bytes!" << std::endl;
+        return 0;
+    }
 
-    return (int) port_->write_some(boost::asio::buffer(buf, size), ec);
+    std::cout << "Writing ";
+    for (int i = 0; i < size; i++)
+    {
+        std::cout << std::hex << (int) (buf[i] & 0xFF) << " ";
+    }
+    std::cout << std::endl;
+
+    int bytes_written = (int) port_->write_some(boost::asio::buffer(buf, size), ec);
+
+    return bytes_written;
 }
 
 void SerialPort::async_read_some_()
@@ -100,7 +115,7 @@ void SerialPort::async_read_some_()
 
 void SerialPort::on_receive_(const boost::system::error_code &ec, size_t bytes_transferred)
 {
-    boost::mutex::scoped_lock look(mutex_);
+    boost::mutex::scoped_lock lock(mutex_);
 
     if (port_.get() == nullptr || !port_->is_open())
     {
@@ -158,16 +173,15 @@ void SerialPort::on_receive_(const boost::system::error_code &ec, size_t bytes_t
             }
             packetsNotYetRead += 1;
             currentFrameBytesLeftToRead = -1;
+
             logFile->write("\n", 1);
 
             i -= 1; // Subtract 1 because i will be incremented at the end of this iteration of the for loop
-
-//            std::string str = QString::asprintf("\n\nLAST BYTE: %02x\n", read_buf_raw_[i] & 0xFF).toStdString();
-//            logFile->write(str.c_str(), (qint64) str.length());
         }
     }
 
     logFile->flush();
+
     async_read_some_();
 }
 

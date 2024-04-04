@@ -35,8 +35,6 @@ private:
 
     boost::asio::io_service io_service_;
 
-    int currentFrameBytesLeftToRead = -1;
-
     uint8_t currentFrame[XBee::MaxFrameBytes];
 
     uint8_t currentFrameByteIndex = 0;
@@ -59,6 +57,7 @@ public:
 
     QFile *logFile;
 
+    int currentFrameBytesLeftToRead = -1;
 protected:
     virtual void async_read_some_();
 

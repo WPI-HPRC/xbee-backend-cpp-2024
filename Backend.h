@@ -8,7 +8,7 @@
 #include <Qt>
 #include <QObject>
 
-#include "SerialReader.h"
+#include "RadioModule.h"
 #include "WebServer.h"
 #include "DataSimulator.h"
 #include "DataLogger.h"
@@ -18,16 +18,13 @@ class Backend : public QObject
 public:
     explicit Backend(QObject *parent = nullptr);
 
-    SerialReader *serialReader;
-
 private:
     WebServer *webServer;
     DataSimulator *dataSimulator;
     DataLogger *dataLogger;
 
-public slots:
-
-    void run();
+    RadioModule *radioModule;
+    QTimer *timer;
 
 };
 

@@ -47,8 +47,6 @@ QSerialPortInfo getTargetPort()
 
 RadioModule::RadioModule() : XBeeDevice()
 {
-    serialPort = new SerialPort();
-
     QSerialPortInfo targetPort = getTargetPort();
 
     if (targetPort.isNull())
@@ -57,16 +55,16 @@ RadioModule::RadioModule() : XBeeDevice()
         exit(1);
     }
 
-    // yuck
-    serialPort->start(getTargetPort().systemLocation().toStdString().c_str(), 115200);
+    serialPort = new SerialPort(targetPort, QSerialPort::Baud115200);
 
     webServer = new WebServer(8001);
 
-    queryParameter(XBee::AtCommand::NodeDiscoveryOptions);
-    queryParameter(XBee::AtCommand::NodeDiscoveryBackoff);
+    sendTransmitRequestsImmediately = true;
 
-    setParameter(XBee::AtCommand::NodeDiscoveryBackoff, 0x30);
-    queryParameter(XBee::AtCommand::NodeDiscoveryBackoff);
+//    queryParameter(XBee::AtCommand::ChannelMask);
+//    queryParameter(XBee::AtCommand::MinimumFrequencies);
+
+//    sendNodeDiscoveryCommand();
 }
 
 void RadioModule::start()
@@ -76,7 +74,7 @@ void RadioModule::start()
 
 void RadioModule::writeBytes(const char *data, size_t length_bytes)
 {
-    int bytes_written = serialPort->write_some(data, (int) length_bytes);
+    int bytes_written = serialPort->write(data, (int) length_bytes);
 
     if (bytes_written != length_bytes)
     {
@@ -103,7 +101,7 @@ void RadioModule::handleReceivePacket(XBee::ReceivePacket::Struct *frame)
 void RadioModule::handleReceivePacket64Bit(XBee::ReceivePacket64Bit::Struct *frame)
 {
 //    std::cout << "RSSI: -" << std::dec << (int) (frame->negativeRssi & 0xFF) << "dbm\n";
-    webServer->dataReady(frame->data, frame->dataLength_bytes);
+    webServer->dataReady(frame->data, frame->dataLength_bytes, frame->negativeRssi);
 }
 
 void RadioModule::incorrectChecksum(uint8_t calculated, uint8_t received)

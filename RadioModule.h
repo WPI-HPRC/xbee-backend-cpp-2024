@@ -8,7 +8,7 @@
 #include "xbee/XBeeDevice.h"
 #include "WebServer.h"
 #include "SerialPort.h"
-#include <boost/asio.hpp>
+#include <QTimer>
 
 class RadioModule : public XBeeDevice
 {
@@ -16,8 +16,6 @@ public:
     RadioModule();
 
     WebServer *webServer;
-
-    boost::asio::io_service io_service;
 
     SerialPort *serialPort;
 

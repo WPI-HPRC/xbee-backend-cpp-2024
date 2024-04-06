@@ -103,3 +103,20 @@ void WebServer::dataReady(const uint8_t *data, size_t length_bytes)
 
     emit broadcast(json.c_str());
 }
+
+void WebServer::dataReady(const uint8_t *data, size_t length_bytes, uint8_t rssi)
+{
+    auto *thePacket = (TelemPacket *) (data);
+
+    qDebug() << "Loop count: " << Qt::dec << thePacket->loopCount;
+
+    std::string json = JS::serializeStruct(*thePacket);
+
+    dataLogger.dataReady(json.c_str(), rssi);
+
+    for (WebSocket *socket: clients)
+    {
+        socket->sendData(json.c_str());
+    }
+//    emit broadcast(json.c_str());
+}

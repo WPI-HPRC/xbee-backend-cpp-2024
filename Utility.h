@@ -7,8 +7,9 @@
 
 #include "json_struct.h"
 
-#pragma pack(push,1)
-struct TelemPacket {
+#pragma pack(push, 1)
+struct TelemPacket
+{
     // State Integer
     // 0 - PreLaunch
     // 1 - Launch
@@ -54,6 +55,7 @@ struct TelemPacket {
     uint8_t satellites = 0;
     bool gpsLock = false;
 
+    uint32_t loopCount = 0;
     uint32_t timestamp = 0;
 
     JS_OBJ(
@@ -86,8 +88,9 @@ struct TelemPacket {
             epochTime,
             satellites,
             gpsLock,
+            loopCount,
             timestamp
-            );
+    );
 };
 #pragma pack(pop)
 

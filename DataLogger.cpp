@@ -7,7 +7,7 @@
 #include "Constants.h"
 #include <QJsonDocument>
 
-#define OFFICIAL_TEST false
+#define OFFICIAL_TEST true
 
 DataLogger::DataLogger()
 {
@@ -76,4 +76,11 @@ void DataLogger::writeData(const QJsonObject &jsonData, DataLogger::PacketType p
 void DataLogger::dataReady(const char *data)
 {
     writeData(QJsonDocument::fromJson(data).object(), DataLogger::Rocket);
+}
+
+void DataLogger::dataReady(const char *data, uint8_t rssi)
+{
+    QJsonObject json = QJsonDocument::fromJson(data).object();
+    json.insert("rssi", -1 * (int) rssi);
+    writeData(json, DataLogger::Rocket);
 }

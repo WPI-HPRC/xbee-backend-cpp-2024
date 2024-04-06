@@ -28,8 +28,6 @@ find_package(Qt6 COMPONENTS
         REQUIRED)
 
 add_executable(xbee_backend_cpp main.cpp
-        SerialReader.cpp
-        SerialReader.h
         xbee/XBeeDevice.cpp
         xbee/XBeeDevice.h
         Utility.h

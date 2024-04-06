@@ -51,7 +51,8 @@ public:
     int port;
 
     void dataReady(const uint8_t *data, size_t length_bytes);
-//    void sendFrame(QStrin)
+
+    void dataReady(const uint8_t *data, size_t length_bytes, uint8_t rssi);
 
 private:
     QWebSocketServer server;

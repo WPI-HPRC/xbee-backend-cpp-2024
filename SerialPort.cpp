@@ -2,131 +2,153 @@
 
 #include <iostream>
 
-SerialPort::SerialPort()
+#define connectHelper(method_signature) connect(m_serialPort, SIGNAL(method_signature), this, SLOT(method_signature))
+
+#define DEBUG true
+
+SerialPort::SerialPort(QSerialPortInfo port, QSerialPort::BaudRate baudRate)
 {
     readQueue = circularQueueCreate<uint8_t>(65536);
     logFile = new QFile("/Users/will/Desktop/log.txt");
 
     logFile->open(QIODeviceBase::WriteOnly);
-}
 
-SerialPort::~SerialPort()
-{
-    stop();
-}
+    m_serialPort = new QSerialPort();
 
-bool SerialPort::start(const char *com_port_name, int baud_rate)
-{
-    boost::system::error_code ec;
+    m_serialPort->setBaudRate(baudRate);
+    m_serialPort->setPort(port);
+    m_serialPort->setDataBits(QSerialPort::Data8);
+    m_serialPort->setParity(QSerialPort::NoParity);
+    m_serialPort->setStopBits(QSerialPort::OneStop);
+    m_serialPort->setFlowControl(QSerialPort::NoFlowControl);
 
-    if (port_)
+    m_serialPort->setReadBufferSize(SERIAL_PORT_READ_BUF_SIZE);
+
+    if (m_serialPort->open(QIODevice::ReadWrite))
     {
-        std::cout << "error : port is already opened..." << std::endl;
-        return false;
+        std::cout << "Opened serial port " << port.manufacturer().toStdString() << " - "
+                  << port.portName().toStdString() << " at baud rate " << baudRate << "\n";
+        connectSignals();
     }
-
-    port_ = serial_port_ptr(new boost::asio::serial_port(io_service_));
-    auto _ = port_->open(com_port_name, ec);
-    if (ec)
+    else
     {
-        std::cout << "error : port_->open() failed...com_port_name="
-                  << com_port_name << ", e=" << ec.message().c_str() << std::endl;
-        return false;
-    }
-
-    // option settings...
-    port_->set_option(boost::asio::serial_port_base::baud_rate(baud_rate));
-    port_->set_option(boost::asio::serial_port_base::character_size(8));
-    port_->set_option(boost::asio::serial_port_base::stop_bits(boost::asio::serial_port_base::stop_bits::one));
-    port_->set_option(boost::asio::serial_port_base::parity(boost::asio::serial_port_base::parity::none));
-    port_->set_option(boost::asio::serial_port_base::flow_control(boost::asio::serial_port_base::flow_control::none));
-
-    async_read_some_();
-    std::thread t([this]()
-                  { this->io_service_.run(); });
-    thread_.swap(t);
-
-    return true;
-}
-
-
-void SerialPort::stop()
-{
-    boost::mutex::scoped_lock look(mutex_);
-
-    if (port_)
-    {
-        port_->cancel();
-        port_->close();
-        port_.reset();
-    }
-
-    if (thread_.joinable())
-    {
-        thread_.join();
-    }
-
-    io_service_.stop();
-    io_service_.reset();
-}
-
-int SerialPort::write_some(const char *buf, const int &size)
-{
-    boost::system::error_code ec;
-
-    if (!port_)
-    {
-        std::cout << "No port!" << std::endl;
-        return -1;
-    }
-    if (size == 0)
-    {
-        std::cout << "Can't write 0 bytes!" << std::endl;
-        return 0;
-    }
-
-    int bytes_written = (int) port_->write_some(boost::asio::buffer(buf, size), ec);
-
-    return bytes_written;
-}
-
-void SerialPort::async_read_some_()
-{
-    if (port_.get() == nullptr || !port_->is_open())
-    {
-        std::cout << "Port is not configured properly" << std::endl;
+        qWarning() << "Couldn't open serial port " << port.portName();
         return;
     }
 
-    port_->async_read_some(
-            boost::asio::buffer(read_buf_raw_, SERIAL_PORT_READ_BUF_SIZE),
-            boost::bind(
-                    &SerialPort::on_receive_,
-                    this, boost::asio::placeholders::error,
-                    boost::asio::placeholders::bytes_transferred));
+    std::cout.flush();
 }
 
-void SerialPort::on_receive_(const boost::system::error_code &ec, size_t bytes_transferred)
+void SerialPort::connectSignals()
 {
-    boost::mutex::scoped_lock lock(mutex_);
+#if DEBUG
+    connectHelper(baudRateChanged(qint32, QSerialPort::Directions));
+    connectHelper(breakEnabledChanged(bool));
+    connectHelper(dataBitsChanged(QSerialPort::DataBits));
+    connectHelper(dataTerminalReadyChanged(bool));
+    connectHelper(errorOccurred(QSerialPort::SerialPortError));
+    connectHelper(flowControlChanged(QSerialPort::FlowControl));
+    connectHelper(parityChanged(QSerialPort::Parity));
+    connectHelper(requestToSendChanged(bool));
+    connectHelper(stopBitsChanged(QSerialPort::StopBits));
+#endif
+    connectHelper(aboutToClose());
+    connectHelper(bytesWritten(qint64));
+    connectHelper(channelBytesWritten(int, qint64));
+    connectHelper(channelReadyRead(int));
+    connectHelper(readChannelFinished());
+    connectHelper(readyRead());
+}
 
-    if (port_.get() == nullptr || !port_->is_open())
-    {
-        std::cout << "Port is not configured properly" << std::endl;
-        return;
-    }
+void SerialPort::baudRateChanged(qint32 baudRate, QSerialPort::Directions directions)
+{
+    qDebug() << "Baud rate changed to: " << baudRate << " direction: " << directions;
+}
 
-    if (ec)
-    {
-        std::cout << "Error" << std::endl;
-        async_read_some_();
-        return;
-    }
+void SerialPort::breakEnabledChanged(bool set)
+{
+    qDebug() << "Break enabled changed to: " << (set ? "TRUE" : "FALSE");
+}
+
+void SerialPort::dataBitsChanged(QSerialPort::DataBits dataBits)
+{
+    qDebug() << "Data bits changed to: " << dataBits;
+}
+
+void SerialPort::dataTerminalReadyChanged(bool set)
+{
+    qDebug() << "Data terminal ready changed to: " << (set ? "TRUE" : "FALSE");
+
+}
+
+void SerialPort::errorOccurred(QSerialPort::SerialPortError error)
+{
+    qDebug() << "Serial error occurred: " << error;
+}
+
+void SerialPort::flowControlChanged(QSerialPort::FlowControl flow)
+{
+    qDebug() << "Flow control changed to: " << flow;
+}
+
+void SerialPort::parityChanged(QSerialPort::Parity parity)
+{
+    qDebug() << "Parity changed to: " << parity;
+}
+
+void SerialPort::requestToSendChanged(bool set)
+{
+    qDebug() << "Request to sendFrame changed to: " << (set ? "TRUE" : "FALSE");
+}
+
+void SerialPort::stopBitsChanged(QSerialPort::StopBits stopBits)
+{
+    qDebug() << "Stop bits changed to: " << stopBits;
+}
+
+void SerialPort::aboutToClose()
+{
+#if DEBUG
+    qDebug() << "About to close";
+#endif
+}
+
+void SerialPort::bytesWritten(qint64 bytes)
+{
+#if DEBUG
+    qDebug() << "Bytes written: " << bytes;
+#endif
+}
+
+void SerialPort::channelBytesWritten(int channel, qint64 bytes)
+{
+#if DEBUG
+    qDebug() << "Channel bytes written. Channel: " << channel << ", bytes: " << bytes;
+#endif
+}
+
+void SerialPort::channelReadyRead(int channel)
+{
+#if DEBUG
+    qDebug() << "Channel ready read: " << channel;
+#endif
+}
+
+void SerialPort::readChannelFinished()
+{
+#if DEBUG
+    qDebug() << "Read channel finished";
+#endif
+}
+
+void SerialPort::readyRead()
+{
+    qint64 bytes_transferred = m_serialPort->read(readBuffer, 256);
 
     unsigned int n = 0;
     for (unsigned int i = 0; i < bytes_transferred; ++i)
     {
-        char c = read_buf_raw_[i];
+        char c = readBuffer[i];
 
         if (!(currentFrameBytesLeftToRead > 0 || c == XBee::StartDelimiter))
         {
@@ -142,11 +164,11 @@ void SerialPort::on_receive_(const boost::system::error_code &ec, size_t bytes_t
                 currentFrameBytesLeftToRead = 3;
             }
 
-            for (i; i < bytes_transferred && currentFrameBytesLeftToRead > 0; i++)
+            for (; i < bytes_transferred && currentFrameBytesLeftToRead > 0; i++)
             {
-                currentFrame[currentFrameByteIndex++] = (uint8_t) read_buf_raw_[i];
+                currentFrame[currentFrameByteIndex++] = (uint8_t) readBuffer[i];
 
-                std::string str = QString::asprintf("%02x ", read_buf_raw_[i] & 0xFF).toStdString();
+                std::string str = QString::asprintf("%02x ", readBuffer[i] & 0xFF).toStdString();
                 logFile->write(str.c_str(), (qint64) str.length());
 
                 currentFrameBytesLeftToRead -= 1;
@@ -174,8 +196,11 @@ void SerialPort::on_receive_(const boost::system::error_code &ec, size_t bytes_t
     }
 
     logFile->flush();
+}
 
-    async_read_some_();
+int SerialPort::write(const char *buf, const int &size)
+{
+    return (int) m_serialPort->write(buf, size);
 }
 
 void SerialPort::read(uint8_t *buffer, size_t length_bytes)

@@ -77,14 +77,17 @@ private:
 
     }
 
-    static QString toJsonString(const QJsonValue& value)
+    static QString toJsonString(const QJsonValue &value)
     {
         if (value.isDouble() || value.isBool())
         {
             double number = value.toDouble();
-            if (number == static_cast<int>(number)) {
+            if (number == static_cast<int>(number))
+            {
                 return QString::number(static_cast<int>(number)); // Return as integer if it's a whole number
-            } else {
+            }
+            else
+            {
                 return QString::number(number, 'f', 10); // Format with decimals if it's not a whole number
             }
         }
@@ -116,7 +119,10 @@ public:
     };
 
     void writeData(const QJsonObject &jsonData, PacketType packetType);
+
     void dataReady(const char *data);
+
+    void dataReady(const char *data, uint8_t rssi);
 
 private:
     CSVWriter rocketLogFile;

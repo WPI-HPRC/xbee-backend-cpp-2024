@@ -1,55 +1,38 @@
 #pragma once
 
-#include <boost/asio.hpp>
-#include <boost/asio/serial_port.hpp>
-#include <boost/system/error_code.hpp>
-#include <boost/system/system_error.hpp>
-#include <boost/bind.hpp>
-#include <boost/thread.hpp>
-#include <boost/circular_buffer.hpp>
 #include "xbee/XBeeUtility.h"
-#include "QFile"
+#include <QObject>
+#include <QSerialPort>
+#include <QSerialPortInfo>
+#include <QFile>
+#include <QDebug>
 
 #include "xbee/circularQueue.hpp"
 
-typedef boost::shared_ptr<boost::asio::serial_port> serial_port_ptr;
-
 #define SERIAL_PORT_READ_BUF_SIZE 65536
 
-class SerialPort
+class SerialPort : public QObject
 {
-protected:
-    serial_port_ptr port_;
-    boost::mutex mutex_;
-
-    char read_buf_raw_[SERIAL_PORT_READ_BUF_SIZE];
+Q_OBJECT
 
 private:
-    SerialPort(const SerialPort &p);
-
-    SerialPort &operator=(const SerialPort &p);
-
-    std::thread thread_;
+    QSerialPort *m_serialPort;
 
     CircularQueue<uint8_t> *readQueue;
 
-    boost::asio::io_service io_service_;
+    char readBuffer[SERIAL_PORT_READ_BUF_SIZE];
 
     uint8_t currentFrame[XBee::MaxFrameBytes];
 
     uint8_t currentFrameByteIndex = 0;
 
+    void connectSignals();
+
 public:
 
-    SerialPort();
+    SerialPort(QSerialPortInfo port, QSerialPort::BaudRate baudRate);
 
-    virtual ~SerialPort();
-
-    bool start(const char *com_port_name, int baud_rate);
-
-    void stop();
-
-    int write_some(const char *buf, const int &size);
+    int write(const char *buf, const int &size);
 
     void read(uint8_t *buffer, size_t length_bytes);
 
@@ -58,9 +41,36 @@ public:
     QFile *logFile;
 
     int currentFrameBytesLeftToRead = -1;
-protected:
-    virtual void async_read_some_();
 
-    virtual void on_receive_(const boost::system::error_code &ec, size_t bytes_transferred);
+public slots:
 
+    void readyRead();
+
+    static void baudRateChanged(qint32 baudRate, QSerialPort::Directions directions);
+
+    static void breakEnabledChanged(bool set);
+
+    static void dataBitsChanged(QSerialPort::DataBits dataBits);
+
+    static void dataTerminalReadyChanged(bool set);
+
+    static void errorOccurred(QSerialPort::SerialPortError error);
+
+    static void flowControlChanged(QSerialPort::FlowControl flow);
+
+    static void parityChanged(QSerialPort::Parity parity);
+
+    static void requestToSendChanged(bool set);
+
+    static void stopBitsChanged(QSerialPort::StopBits stopBits);
+
+    static void aboutToClose();
+
+    void bytesWritten(qint64 bytes);
+
+    static void channelBytesWritten(int channel, qint64 bytes);
+
+    static void channelReadyRead(int channel);
+
+    static void readChannelFinished();
 };

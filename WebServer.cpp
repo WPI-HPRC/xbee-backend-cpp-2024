@@ -108,7 +108,7 @@ void WebServer::dataReady(const uint8_t *data, size_t length_bytes, uint8_t rssi
 {
     auto *thePacket = (TelemPacket *) (data);
 
-    qDebug() << "Loop count: " << Qt::dec << thePacket->loopCount;
+//    qDebug() << "Loop count: " << Qt::dec << thePacket->loopCount;
 
     std::string json = JS::serializeStruct(*thePacket);
 

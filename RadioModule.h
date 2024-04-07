@@ -34,6 +34,12 @@ public:
     void incorrectChecksum(uint8_t calculated, uint8_t received) override;
 
     void log(const char *format, ...) override;
+
+    void didCycle() override;
+
+    unsigned int cycleCount = 0;
+
+    uint64_t avBayAddr = 0x0013a200422cdf59;
 };
 
 

@@ -61,6 +61,10 @@ RadioModule::RadioModule() : XBeeDevice()
 
     sendTransmitRequestsImmediately = true;
 
+    sendFramesImmediately = true;
+
+//    queryParameterRemote(0x0013a200422cdf59, XBee::AtCommand::SupplyVoltage);
+
 //    queryParameter(XBee::AtCommand::ChannelMask);
 //    queryParameter(XBee::AtCommand::MinimumFrequencies);
 
@@ -75,6 +79,15 @@ void RadioModule::start()
 void RadioModule::writeBytes(const char *data, size_t length_bytes)
 {
     int bytes_written = serialPort->write(data, (int) length_bytes);
+
+/*
+    std::cout << "Writing: ";
+    for (int i = 0; i < length_bytes; i++)
+    {
+        std::cout << std::hex << (int) (data[i] & 0xFF) << " ";
+    }
+    std::cout << std::endl;
+     */
 
     if (bytes_written != length_bytes)
     {
@@ -122,5 +135,20 @@ void RadioModule::log(const char *format, ...)
 
     vprintf(format, args);
     va_end(args);
+}
+
+void RadioModule::didCycle()
+{
+
+    if (cycleCount % 500 == 0)
+    {
+
+        queryParameterRemote(avBayAddr, XBee::AtCommand::UnicastAttemptedCount);
+        queryParameterRemote(avBayAddr, XBee::AtCommand::TransmissionFailureCount);
+        queryParameterRemote(avBayAddr, XBee::AtCommand::MacAckFailureCount);
+
+    }
+
+    cycleCount++;
 }
 

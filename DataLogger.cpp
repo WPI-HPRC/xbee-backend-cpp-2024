@@ -7,7 +7,7 @@
 #include "Constants.h"
 #include <QJsonDocument>
 
-#define OFFICIAL_TEST true
+#define OFFICIAL_TEST false
 
 DataLogger::DataLogger()
 {

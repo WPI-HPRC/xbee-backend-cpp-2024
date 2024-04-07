@@ -4,7 +4,7 @@
 
 #define connectHelper(method_signature) connect(m_serialPort, SIGNAL(method_signature), this, SLOT(method_signature))
 
-#define DEBUG true
+#define DEBUG false
 
 SerialPort::SerialPort(QSerialPortInfo port, QSerialPort::BaudRate baudRate)
 {

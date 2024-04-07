@@ -124,15 +124,30 @@ public:
 
     void dataReady(const char *data, uint8_t rssi);
 
+    void writeToByteFile(const char *text, size_t size);
+
+    void writeToByteFile(const QString &str);
+
+    void flushByteFile();
+
+    void writeToTextFile(const char *text, size_t size);
+
+    void writeToTextFile(const QString &str);
+
+    void flushTextFile();
+
 private:
     CSVWriter rocketLogFile;
     CSVWriter payloadLogFile;
 
+    QFile byteLog;
+    QFile textLog;
+
     QDir logDir;
 
-    void createDirectory();
+    void createDirectory(const QString &timeString);
 
-    void createFile();
+    void createFiles();
 
 };
 

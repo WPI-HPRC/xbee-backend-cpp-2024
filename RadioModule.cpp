@@ -5,6 +5,8 @@
 #include "RadioModule.h"
 #include <iostream>
 
+#include <format>
+
 #include <QSerialPort>
 #include <QSerialPortInfo>
 
@@ -55,13 +57,16 @@ RadioModule::RadioModule() : XBeeDevice()
         exit(1);
     }
 
-    serialPort = new SerialPort(targetPort, QSerialPort::Baud115200);
-
     webServer = new WebServer(8001);
+
+    serialPort = new SerialPort(targetPort, QSerialPort::Baud115200, &webServer->dataLogger);
+
 
     sendTransmitRequestsImmediately = true;
 
     sendFramesImmediately = true;
+
+    logWrongChecksums = false;
 
 //    queryParameterRemote(0x0013a200422cdf59, XBee::AtCommand::SupplyVoltage);
 
@@ -80,19 +85,18 @@ void RadioModule::writeBytes(const char *data, size_t length_bytes)
 {
     int bytes_written = serialPort->write(data, (int) length_bytes);
 
-/*
-    std::cout << "Writing: ";
+    webServer->dataLogger.writeToTextFile("Writing: ");
     for (int i = 0; i < length_bytes; i++)
     {
-        std::cout << std::hex << (int) (data[i] & 0xFF) << " ";
+        webServer->dataLogger.writeToTextFile(QString::asprintf("%02x ", data[i] & 0xFF));
     }
-    std::cout << std::endl;
-     */
+    webServer->dataLogger.writeToTextFile("\n");
+    webServer->dataLogger.flushTextFile();
+
 
     if (bytes_written != length_bytes)
     {
-        std::cout << "FAILED TO WRITE ALL BYTES. EXPECTED " << std::dec << (int) length_bytes << ", RECEIVED "
-                  << (int) bytes_written << std::endl;
+        log("FAILED TO WRITE ALL BYTES. EXPECTED %d, RECEIVED %d", length_bytes, bytes_written);
     }
 }
 
@@ -119,12 +123,14 @@ void RadioModule::handleReceivePacket64Bit(XBee::ReceivePacket64Bit::Struct *fra
 
 void RadioModule::incorrectChecksum(uint8_t calculated, uint8_t received)
 {
-    std::cout << "Checksum mismatch. Calculated: " << std::hex << (int) calculated << ", Received: "
-              << std::hex << (int) received
-              << std::endl;
-
-    std::string str = QString::asprintf("\nWRONG CHECKSUM. calculated: %02x, received: %02x\n", calculated & 0xFF,
+    std::string str = QString::asprintf("\nWRONG CHECKSUM. calculated: %02x, received: %02x\n\n", calculated & 0xFF,
                                         received & 0xFF).toStdString();
+    webServer->dataLogger.writeToByteFile(str.c_str(), str.length());
+    webServer->dataLogger.writeToTextFile(str.c_str(), str.length());
+
+    webServer->dataLogger.flushByteFile();
+    webServer->dataLogger.flushTextFile();
+
     serialPort->logFile->write(str.c_str(), (qint64) str.length());
 }
 
@@ -134,6 +140,15 @@ void RadioModule::log(const char *format, ...)
     va_start(args, format);
 
     vprintf(format, args);
+
+    char buff[256];
+    vsnprintf(buff, sizeof(buff), format, args);
+    std::string str = buff;
+    
+    webServer->dataLogger.writeToTextFile(str.c_str(), str.length());
+
+    webServer->dataLogger.flushTextFile();
+
     va_end(args);
 }
 

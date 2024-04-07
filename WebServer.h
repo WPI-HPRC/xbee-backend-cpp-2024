@@ -54,10 +54,11 @@ public:
 
     void dataReady(const uint8_t *data, size_t length_bytes, uint8_t rssi);
 
+    DataLogger dataLogger;
+
 private:
     QWebSocketServer server;
     QList<WebSocket *> clients;
-    DataLogger dataLogger;
 
 
 public slots:

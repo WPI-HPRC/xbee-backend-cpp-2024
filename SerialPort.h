@@ -7,6 +7,8 @@
 #include <QFile>
 #include <QDebug>
 
+#include "DataLogger.h"
+
 #include "xbee/circularQueue.hpp"
 
 #define SERIAL_PORT_READ_BUF_SIZE 65536
@@ -28,9 +30,11 @@ private:
 
     void connectSignals();
 
+    DataLogger *dataLogger;
+
 public:
 
-    SerialPort(QSerialPortInfo port, QSerialPort::BaudRate baudRate);
+    SerialPort(QSerialPortInfo port, QSerialPort::BaudRate baudRate, DataLogger *dataLogger);
 
     int write(const char *buf, const int &size);
 

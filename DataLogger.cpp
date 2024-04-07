@@ -11,13 +11,13 @@
 
 DataLogger::DataLogger()
 {
-    createDirectory();
-    createFile();
+    createFiles();
 }
 
-void DataLogger::createDirectory()
+void DataLogger::createDirectory(const QString &timeString)
 {
     logDir.setPath(Constants::LogDirPath);
+    logDir.setPath(logDir.path().append("/").append(timeString));
 
     if (logDir.path().startsWith("~"))
     {
@@ -43,11 +43,13 @@ void DataLogger::createDirectory()
 #endif
 }
 
-void DataLogger::createFile()
+void DataLogger::createFiles()
 {
     QDateTime currentTime = QDateTime::currentDateTime();
 
     QString timeString = currentTime.toString(Constants::LogTimeFormat);
+
+    createDirectory(timeString);
 
 #if OFFICIAL_TEST
     rocketLogFile.open(logDir.path().append("/").append(timeString).append("_rocket.csv"));
@@ -55,7 +57,43 @@ void DataLogger::createFile()
 #else
     rocketLogFile.open(logDir.path().append("/").append(timeString).append("_rocket_NOT_OFFICIAL.csv"));
     payloadLogFile.open(logDir.path().append("/").append(timeString).append("_payload_NOT_OFFICIAL.csv"));
+    byteLog.setFileName(logDir.path().append("/").append(timeString).append("_bytes_NOT_OFFICIAL.txt"));
+    byteLog.open(QIODeviceBase::WriteOnly | QIODeviceBase::Text);
+    textLog.setFileName(logDir.path().append("/").append(timeString).append("_log_NOT_OFFICIAL.txt"));
+    textLog.open(QIODeviceBase::WriteOnly | QIODeviceBase::Text);
 #endif
+}
+
+void DataLogger::writeToByteFile(const char *text, size_t size)
+{
+    byteLog.write(text, size);
+}
+
+void DataLogger::writeToByteFile(const QString &str)
+{
+    writeToByteFile(str.toStdString().c_str(), str.toStdString().length());
+}
+
+
+void DataLogger::flushByteFile()
+{
+    byteLog.flush();
+}
+
+void DataLogger::writeToTextFile(const char *text, size_t size)
+{
+    textLog.write(text, size);
+}
+
+void DataLogger::writeToTextFile(const QString &str)
+{
+    writeToTextFile(str.toStdString().c_str(), str.toStdString().length());
+}
+
+
+void DataLogger::flushTextFile()
+{
+    textLog.flush();
 }
 
 void DataLogger::writeData(const QJsonObject &jsonData, DataLogger::PacketType packetType)

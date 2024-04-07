@@ -6,7 +6,8 @@
 
 #define DEBUG false
 
-SerialPort::SerialPort(QSerialPortInfo port, QSerialPort::BaudRate baudRate)
+SerialPort::SerialPort(QSerialPortInfo port, QSerialPort::BaudRate baudRate, DataLogger *dataLogger) : dataLogger(
+        dataLogger)
 {
     readQueue = circularQueueCreate<uint8_t>(65536);
     logFile = new QFile("/Users/will/Desktop/log.txt");
@@ -153,7 +154,7 @@ void SerialPort::readyRead()
         if (!(currentFrameBytesLeftToRead > 0 || c == XBee::StartDelimiter))
         {
             std::string str = QString::asprintf("%02x\n", c & 0xFF).toStdString();
-            logFile->write(str.c_str(), (qint64) str.length());
+            dataLogger->writeToByteFile(str.c_str(), (qint64) str.length());
         }
 
         if (currentFrameBytesLeftToRead > 0 || c == XBee::StartDelimiter)
@@ -169,7 +170,7 @@ void SerialPort::readyRead()
                 currentFrame[currentFrameByteIndex++] = (uint8_t) readBuffer[i];
 
                 std::string str = QString::asprintf("%02x ", readBuffer[i] & 0xFF).toStdString();
-                logFile->write(str.c_str(), (qint64) str.length());
+                dataLogger->writeToByteFile(str.c_str(), (qint64) str.length());
 
                 currentFrameBytesLeftToRead -= 1;
 
@@ -189,13 +190,13 @@ void SerialPort::readyRead()
             packetsNotYetRead += 1;
             currentFrameBytesLeftToRead = -1;
 
-            logFile->write("\n", 1);
+            dataLogger->writeToByteFile("\n", 1);
 
             i -= 1; // Subtract 1 because i will be incremented at the end of this iteration of the for loop
         }
     }
 
-    logFile->flush();
+    dataLogger->flushByteFile();
 }
 
 int SerialPort::write(const char *buf, const int &size)

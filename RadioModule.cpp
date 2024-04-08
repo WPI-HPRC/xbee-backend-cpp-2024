@@ -144,7 +144,7 @@ void RadioModule::log(const char *format, ...)
     char buff[256];
     vsnprintf(buff, sizeof(buff), format, args);
     std::string str = buff;
-    
+
     webServer->dataLogger.writeToTextFile(str.c_str(), str.length());
 
     webServer->dataLogger.flushTextFile();
@@ -154,7 +154,7 @@ void RadioModule::log(const char *format, ...)
 
 void RadioModule::didCycle()
 {
-
+    return;
     if (cycleCount % 500 == 0)
     {
 

@@ -7,7 +7,7 @@
 #include "Constants.h"
 #include <QJsonDocument>
 
-#define OFFICIAL_TEST false
+#define OFFICIAL_TEST true
 
 DataLogger::DataLogger()
 {
@@ -54,6 +54,10 @@ void DataLogger::createFiles()
 #if OFFICIAL_TEST
     rocketLogFile.open(logDir.path().append("/").append(timeString).append("_rocket.csv"));
     payloadLogFile.open(logDir.path().append("/").append(timeString).append("_payload.csv"));
+    byteLog.setFileName(logDir.path().append("/").append(timeString).append("_bytes.txt"));
+    byteLog.open(QIODeviceBase::WriteOnly | QIODeviceBase::Text);
+    textLog.setFileName(logDir.path().append("/").append(timeString).append("_log.txt"));
+    textLog.open(QIODeviceBase::WriteOnly | QIODeviceBase::Text);
 #else
     rocketLogFile.open(logDir.path().append("/").append(timeString).append("_rocket_NOT_OFFICIAL.csv"));
     payloadLogFile.open(logDir.path().append("/").append(timeString).append("_payload_NOT_OFFICIAL.csv"));

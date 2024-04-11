@@ -169,8 +169,6 @@ void RadioModule::didCycle()
 
 void RadioModule::_handleRemoteAtCommandResponse(const uint8_t *frame, uint8_t length_bytes, bool paramWasBeingWaitedOn)
 {
-    // This function is marked virtual but is optional to override
-
     uint16_t command = getRemoteAtCommand(frame);
 
     uint64_t address = getAddress(&frame[XBee::RemoteAtCommandResponse::BytesBeforeAddress]);

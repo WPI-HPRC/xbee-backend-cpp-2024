@@ -33,6 +33,9 @@ public:
 
     void incorrectChecksum(uint8_t calculated, uint8_t received) override;
 
+    void
+    _handleRemoteAtCommandResponse(const uint8_t *frame, uint8_t length_bytes, bool paramWasBeingWaitedOn) override;
+
     void log(const char *format, ...) override;
 
     void didCycle() override;

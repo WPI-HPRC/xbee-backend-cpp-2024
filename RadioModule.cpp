@@ -167,3 +167,29 @@ void RadioModule::didCycle()
     cycleCount++;
 }
 
+void RadioModule::_handleRemoteAtCommandResponse(const uint8_t *frame, uint8_t length_bytes, bool paramWasBeingWaitedOn)
+{
+    // This function is marked virtual but is optional to override
+
+    uint16_t command = getRemoteAtCommand(frame);
+
+    uint64_t address = getAddress(&frame[XBee::RemoteAtCommandResponse::BytesBeforeAddress]);
+
+    log("Remote AT response from %016llx: ", (unsigned long long) address);
+    if (command == XBee::AtCommand::SupplyVoltage)
+    {
+        uint16_t voltage = frame[XBee::RemoteAtCommandResponse::BytesBeforeCommandData] << 8 |
+                           frame[XBee::RemoteAtCommandResponse::BytesBeforeCommandData + 1];
+
+        log("voltage = %f mV", (float) voltage / 1000);
+    }
+
+    log("%c%c: ", (command & 0xFF00) >> 8, command & 0x00FF);
+    for (uint8_t i = 0; i < length_bytes - XBee::RemoteAtCommandResponse::PacketBytes; i++)
+    {
+        log("%02x ", (int) (frame[XBee::RemoteAtCommandResponse::BytesBeforeCommandData + i] & 0xFF));
+    }
+
+    log("\n");
+}
+

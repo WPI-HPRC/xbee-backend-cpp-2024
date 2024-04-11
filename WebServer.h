@@ -56,6 +56,8 @@ public:
 
     DataLogger dataLogger;
 
+    void broadcast(const QString &str);
+
 private:
     QWebSocketServer server;
     QList<WebSocket *> clients;
@@ -76,11 +78,6 @@ public slots:
     void serverError(QWebSocketProtocol::CloseCode closeCode);
 
     void clientStateChanged(WebSocket *socket, const QAbstractSocket::SocketState &state);
-
-signals:
-
-    void broadcast(const QString &str);
-
 };
 
 

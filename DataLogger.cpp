@@ -78,7 +78,6 @@ void DataLogger::writeToByteFile(const QString &str)
     writeToByteFile(str.toStdString().c_str(), str.toStdString().length());
 }
 
-
 void DataLogger::flushByteFile()
 {
     byteLog.flush();

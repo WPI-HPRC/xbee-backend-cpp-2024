@@ -154,7 +154,7 @@ void RadioModule::log(const char *format, ...)
 
 void RadioModule::didCycle()
 {
-    return;
+//    return;
     if (cycleCount % 500 == 0)
     {
 

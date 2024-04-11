@@ -8,12 +8,17 @@
 
 #define DEBUG_SERIAL false
 
+#define SIMULATE_DATA false
+
 Backend::Backend(QObject *parent) : QObject(parent)
 {
-//    webServer = new WebServer(8001);
+#if SIMULATE_DATA
+    webServer = new WebServer(8001);
 
-//    dataSimulator = new DataSimulator("/Users/will/Documents/GitHub/HPRC/telemetry-server/logs/2024-02-24_18.02.19_telemetry.csv", 25, webServer);
-//    return;
+    dataSimulator = new DataSimulator(
+            "/Users/will/Documents/GitHub/HPRC/telemetry-server/logs/2024-02-24_18.02.19_telemetry.csv", 25, webServer);
+    return;
+#else
 
     radioModule = new RadioModule();
 
@@ -25,4 +30,5 @@ Backend::Backend(QObject *parent) : QObject(parent)
             }
     );
     timer->start();
+#endif
 }

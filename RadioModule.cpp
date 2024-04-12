@@ -73,6 +73,8 @@ RadioModule::RadioModule() : XBeeDevice()
 //    queryParameter(XBee::AtCommand::ChannelMask);
 //    queryParameter(XBee::AtCommand::MinimumFrequencies);
 
+    setParameter(XBee::AtCommand::ApiOptions, 0x02);
+
 //    sendNodeDiscoveryCommand();
 }
 
@@ -117,7 +119,7 @@ void RadioModule::handleReceivePacket(XBee::ReceivePacket::Struct *frame)
 
 void RadioModule::handleReceivePacket64Bit(XBee::ReceivePacket64Bit::Struct *frame)
 {
-//    std::cout << "RSSI: -" << std::dec << (int) (frame->negativeRssi & 0xFF) << "dbm\n";
+    std::cout << "RSSI: -" << std::dec << (int) (frame->negativeRssi & 0xFF) << "dbm\n";
     webServer->dataReady(frame->data, frame->dataLength_bytes, frame->negativeRssi);
 }
 
@@ -154,7 +156,7 @@ void RadioModule::log(const char *format, ...)
 
 void RadioModule::didCycle()
 {
-//    return;
+    return;
     if (cycleCount % 500 == 0)
     {
 

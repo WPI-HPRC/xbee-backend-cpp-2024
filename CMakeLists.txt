@@ -32,7 +32,10 @@ add_executable(xbee_backend_cpp main.cpp
         RadioModule.h
         SerialPort.cpp
         SerialPort.h
-        xbee/circularQueue.hpp)
+        xbee/circularQueue.hpp
+        hprcWebSocket.cpp
+        hprcWebSocket.h
+        Secrets.h)
 
 target_link_libraries(xbee_backend_cpp
         Qt::Core

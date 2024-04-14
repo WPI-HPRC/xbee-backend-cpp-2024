@@ -8,6 +8,7 @@
 #include "xbee/XBeeDevice.h"
 #include "WebServer.h"
 #include "SerialPort.h"
+#include "hprcWebSocket.h"
 #include <QTimer>
 
 class RadioModule : public XBeeDevice

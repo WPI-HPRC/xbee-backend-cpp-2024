@@ -67,7 +67,6 @@ RadioModule::RadioModule() : XBeeDevice()
     sendFramesImmediately = true;
 
     logWrongChecksums = false;
-
 //    queryParameterRemote(0x0013a200422cdf59, XBee::AtCommand::SupplyVoltage);
 
 //    queryParameter(XBee::AtCommand::ChannelMask);
@@ -157,7 +156,7 @@ void RadioModule::log(const char *format, ...)
 
 void RadioModule::didCycle()
 {
-//    return;
+    return;
     if (cycleCount % 500 == 0)
     {
 

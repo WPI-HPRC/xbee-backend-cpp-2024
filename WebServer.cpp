@@ -14,6 +14,11 @@ WebServer::WebServer(int port, QObject *parent) : QObject(parent), port(port),
                                                   server("Local Server",
                                                          QWebSocketServer::NonSecureMode)
 {
+
+    serverSocket = new HPRCWebSocket();
+
+    serverSocket->connectToServer();
+
     server.listen(QHostAddress::LocalHost, port);
 
     std::cout << "Started local server on " << server.serverAddress().toString().toStdString() << ":"
@@ -101,7 +106,7 @@ void WebServer::dataReady(const uint8_t *data, size_t length_bytes)
 
     dataLogger.dataReady(json.c_str());
 
-    emit broadcast(json.c_str());
+    broadcast(json.c_str());
 }
 
 void WebServer::dataReady(const uint8_t *data, size_t length_bytes, uint8_t rssi)
@@ -114,18 +119,14 @@ void WebServer::dataReady(const uint8_t *data, size_t length_bytes, uint8_t rssi
 
     dataLogger.dataReady(json.c_str(), rssi);
 
-    for (WebSocket *socket: clients)
-    {
-        socket->sendData(json.c_str());
-    }
-//    emit broadcast(json.c_str());
+    broadcast(json.c_str());
 }
 
 void WebServer::broadcast(const QString &str)
 {
+    serverSocket->m_socket->sendTextMessage(str);
     for (WebSocket *socket: clients)
     {
-        qDebug() << "Socket";
         socket->sendData(str);
     }
 }

@@ -8,6 +8,7 @@
 #include <QObject>
 #include <QtWebSockets/QtWebSockets>
 #include "DataLogger.h"
+#include "hprcWebSocket.h"
 
 class WebSocket : public QObject
 {
@@ -57,6 +58,8 @@ public:
     DataLogger dataLogger;
 
     void broadcast(const QString &str);
+
+    HPRCWebSocket *serverSocket;
 
 private:
     QWebSocketServer server;

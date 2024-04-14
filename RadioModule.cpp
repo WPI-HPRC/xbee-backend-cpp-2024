@@ -73,8 +73,9 @@ RadioModule::RadioModule() : XBeeDevice()
 //    queryParameter(XBee::AtCommand::ChannelMask);
 //    queryParameter(XBee::AtCommand::MinimumFrequencies);
 
-    setParameter(XBee::AtCommand::ApiOptions, 0x02);
-
+//    setParameter(XBee::AtCommand::ApiOptions, 0x02);
+//    setParameterRemote(, XBee::AtCommand::PowerLevel, 0x02);
+//    queryParameterRemote(0x0013A20042378B08, XBee::AtCommand::PowerLevel);
 //    sendNodeDiscoveryCommand();
 }
 
@@ -156,13 +157,13 @@ void RadioModule::log(const char *format, ...)
 
 void RadioModule::didCycle()
 {
-    return;
+//    return;
     if (cycleCount % 500 == 0)
     {
 
-        queryParameterRemote(avBayAddr, XBee::AtCommand::UnicastAttemptedCount);
-        queryParameterRemote(avBayAddr, XBee::AtCommand::TransmissionFailureCount);
-        queryParameterRemote(avBayAddr, XBee::AtCommand::MacAckFailureCount);
+        queryParameterRemote(0x0013A20042378B08, XBee::AtCommand::UnicastAttemptedCount);
+        queryParameterRemote(0x0013A20042378B08, XBee::AtCommand::TransmissionFailureCount);
+        queryParameterRemote(0x0013A20042378B08, XBee::AtCommand::MacAckFailureCount);
 
     }
 

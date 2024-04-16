@@ -100,9 +100,16 @@ void WebServer::clientStateChanged(WebSocket *socket, const QAbstractSocket::Soc
 
 void WebServer::dataReady(const uint8_t *data, size_t length_bytes)
 {
-    auto *thePacket = (TelemPacket *) (data);
-
-    std::string json = JS::serializeStruct(*thePacket);
+    std::string json;
+    if (data[0] == 0x01) // Rocket packet
+    {
+        json = JS::serializeStruct(*(TelemPacket *) (&data[1]));
+    }
+    else
+    {
+        qDebug() << "Unrecognized: " << Qt::hex << (int) (data[0] & 0xFF);
+        return;
+    }
 
     dataLogger.dataReady(json.c_str());
 
@@ -111,11 +118,16 @@ void WebServer::dataReady(const uint8_t *data, size_t length_bytes)
 
 void WebServer::dataReady(const uint8_t *data, size_t length_bytes, uint8_t rssi)
 {
-    auto *thePacket = (TelemPacket *) (data);
-
-//    qDebug() << "Loop count: " << Qt::dec << thePacket->loopCount;
-
-    std::string json = JS::serializeStruct(*thePacket);
+    std::string json;
+    if (data[0] == 0x01) // Rocket packet
+    {
+        json = JS::serializeStruct(*(TelemPacket *) (&data[1]));
+    }
+    else
+    {
+        qDebug() << "Unrecognized: " << Qt::hex << (int) (data[0] & 0xFF);
+        return;
+    }
 
     dataLogger.dataReady(json.c_str(), rssi);
 

@@ -120,9 +120,9 @@ public:
 
     void writeData(const QJsonObject &jsonData, PacketType packetType);
 
-    void dataReady(const char *data);
+    void dataReady(const char *data, DataLogger::PacketType packetType);
 
-    void dataReady(const char *data, uint8_t rssi);
+    void dataReady(const char *data, DataLogger::PacketType packetType, uint8_t rssi);
 
     void writeToByteFile(const char *text, size_t size);
 

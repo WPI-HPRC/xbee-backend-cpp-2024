@@ -114,14 +114,14 @@ void DataLogger::writeData(const QJsonObject &jsonData, DataLogger::PacketType p
     }
 }
 
-void DataLogger::dataReady(const char *data)
+void DataLogger::dataReady(const char *data, DataLogger::PacketType packetType)
 {
-    writeData(QJsonDocument::fromJson(data).object(), DataLogger::Rocket);
+    writeData(QJsonDocument::fromJson(data).object(), packetType);
 }
 
-void DataLogger::dataReady(const char *data, uint8_t rssi)
+void DataLogger::dataReady(const char *data, DataLogger::PacketType packetType, uint8_t rssi)
 {
     QJsonObject json = QJsonDocument::fromJson(data).object();
     json.insert("rssi", -1 * (int) rssi);
-    writeData(json, DataLogger::Rocket);
+    writeData(json, packetType);
 }

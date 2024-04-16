@@ -8,7 +8,7 @@
 #include "json_struct.h"
 
 #pragma pack(push, 1)
-struct TelemPacket
+struct RocketTelemPacket
 {
     // State Integer
     // 0 - PreLaunch
@@ -93,6 +93,140 @@ struct TelemPacket
     );
 };
 #pragma pack(pop)
+
+#pragma pack(push, 1)
+struct PayloadTelemPacket
+{
+    // State Integer
+    // 0 - PreLaunch
+    // 1 - Stowed
+    // 2 - Freefall
+    // 3 - WindLeft
+    // 4 - HoldLeft
+    // 5 - WindRight
+    // 6 - HoldRight
+    // 7 - LandPrep
+    // 8 - Recovery
+    // 9 - Abort
+    uint8_t p_state;
+
+    // Raw Sensor Readings
+    float p_accelX = 0.0f;
+    float p_accelY = 0.0f;
+    float p_accelZ = 0.0f;
+    float p_gyroX = 0.0f;
+    float p_gyroY = 0.0f;
+    float p_gyroZ = 0.0f;
+    float p_magX = 0.0f;
+    float p_magY = 0.0f;
+    float p_magZ = 0.0f;
+    float p_pressure = 0.0f;
+
+    // Calculated Values
+    float p_altitude = 0.0f;
+
+    // EKF Results
+    float p_w = 0.0f; // Quaternion State
+    float p_i = 0.0f;
+    float p_j = 0.0f;
+    float p_k = 0.0f;
+    float p_posX = 0.0f; // Position State ECEF
+    float p_posY = 0.0f;
+    float p_posZ = 0.0f;
+    float p_velX = 0.0f; // Velocity State ECEF
+    float p_velY = 0.0f;
+    float p_velZ = 0.0f;
+
+    // GPS Inputs
+    float p_gpsLat = 0.0f;
+    float p_gpsLong = 0.0f;
+    float p_gpsAltMSL = 0.0f;
+    float p_gpsAltAGL = 0.0f;
+    uint32_t p_epochTime = 0;
+    uint8_t p_satellites = 0;
+    bool p_gpsLock = false;
+
+    uint32_t p_timestamp = 0;
+
+    //Payload Specific
+
+    //CV
+    uint32_t p_cx = 0; //Camera Centroids
+    uint32_t p_cy = 0;
+
+    float p_targetGpsLat = 0.0f; //Target Point GPS Estimations
+    float p_targetGpsLong = 0.0f;
+
+    //Controls
+    uint32_t p_desiredServoPos1 = 0; //Servo Controls Values
+    uint32_t p_actualServoPos1 = 0;
+    uint32_t p_desiredServoPos2 = 0;
+    uint32_t p_actualServoPos2 = 0;
+    uint32_t p_desiredServoPos3 = 0;
+    uint32_t p_actualServoPos3 = 0;
+    uint32_t p_desiredServoPos4 = 0;
+    uint32_t p_actualServoPos4 = 0;
+
+    float p_trajA = 0.0f; //Calculated Trajectory Constants
+    float p_trajB = 0.0f;
+    float p_trajC = 0.0f;
+    float p_trajD = 0.0f;
+
+    uint32_t p_loopCount = 0;
+
+    JS_OBJ(
+            p_state,
+            p_accelX,
+            p_accelY,
+            p_accelZ,
+            p_gyroX,
+            p_gyroY,
+            p_gyroZ,
+            p_magX,
+            p_magY,
+            p_magZ,
+            p_pressure,
+            p_altitude,
+            p_w,
+            p_i,
+            p_j,
+            p_k,
+            p_posX,
+            p_posY,
+            p_posZ,
+            p_velX,
+            p_velY,
+            p_velZ,
+            p_gpsLat,
+            p_gpsLong,
+            p_gpsAltMSL,
+            p_gpsAltAGL,
+            p_epochTime,
+            p_satellites,
+            p_gpsLock,
+            p_timestamp,
+
+            p_targetGpsLat,
+            p_targetGpsLong,
+
+            p_desiredServoPos1,
+            p_actualServoPos1,
+            p_desiredServoPos2,
+            p_actualServoPos2,
+            p_desiredServoPos3,
+            p_actualServoPos3,
+            p_desiredServoPos4,
+            p_actualServoPos4,
+
+            p_trajA,
+            p_trajB,
+            p_trajC,
+            p_trajD,
+
+            p_loopCount
+    );
+};
+#pragma pack(pop);
 
 #endif //XBEE_BACKEND_CPP_UTILITY_H
 

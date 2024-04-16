@@ -101,9 +101,16 @@ void WebServer::clientStateChanged(WebSocket *socket, const QAbstractSocket::Soc
 void WebServer::dataReady(const uint8_t *data, size_t length_bytes)
 {
     std::string json;
+    DataLogger::PacketType packetType;
     if (data[0] == 0x01) // Rocket packet
     {
-        json = JS::serializeStruct(*(TelemPacket *) (&data[1]));
+        json = JS::serializeStruct(*(RocketTelemPacket *) (&data[1]));
+        packetType = DataLogger::Rocket;
+    }
+    else if (data[0] == 0x02) // Payload packet
+    {
+        json = JS::serializeStruct(*(PayloadTelemPacket *) (&data[1]));
+        packetType = DataLogger::Payload
     }
     else
     {
@@ -111,17 +118,24 @@ void WebServer::dataReady(const uint8_t *data, size_t length_bytes)
         return;
     }
 
-    dataLogger.dataReady(json.c_str());
+    dataLogger.dataReady(json.c_str(), packetType);
 
     broadcast(json.c_str());
 }
 
 void WebServer::dataReady(const uint8_t *data, size_t length_bytes, uint8_t rssi)
 {
+    DataLogger::PacketType packetType;
     std::string json;
     if (data[0] == 0x01) // Rocket packet
     {
-        json = JS::serializeStruct(*(TelemPacket *) (&data[1]));
+        json = JS::serializeStruct(*(RocketTelemPacket *) (&data[1]));
+        packetType = DataLogger::Rocket;
+    }
+    else if (data[0] == 0x02) // Payload packet
+    {
+        json = JS::serializeStruct(*(PayloadTelemPacket *) (&data[1]));
+        packetType = DataLogger::Payload
     }
     else
     {
@@ -129,7 +143,7 @@ void WebServer::dataReady(const uint8_t *data, size_t length_bytes, uint8_t rssi
         return;
     }
 
-    dataLogger.dataReady(json.c_str(), rssi);
+    dataLogger.dataReady(json.c_str(), packetType, rssi);
 
     broadcast(json.c_str());
 }

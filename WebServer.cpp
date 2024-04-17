@@ -110,7 +110,7 @@ void WebServer::dataReady(const uint8_t *data, size_t length_bytes)
     else if (data[0] == 0x02) // Payload packet
     {
         json = JS::serializeStruct(*(PayloadTelemPacket *) (&data[1]));
-        packetType = DataLogger::Payload
+        packetType = DataLogger::Payload;
     }
     else
     {
@@ -135,7 +135,7 @@ void WebServer::dataReady(const uint8_t *data, size_t length_bytes, uint8_t rssi
     else if (data[0] == 0x02) // Payload packet
     {
         json = JS::serializeStruct(*(PayloadTelemPacket *) (&data[1]));
-        packetType = DataLogger::Payload
+        packetType = DataLogger::Payload;
     }
     else
     {

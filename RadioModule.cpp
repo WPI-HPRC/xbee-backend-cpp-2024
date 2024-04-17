@@ -157,12 +157,12 @@ void RadioModule::log(const char *format, ...)
 void RadioModule::didCycle()
 {
     return;
-    if (cycleCount % 500 == 0)
+    if (cycleCount % 50 == 0)
     {
 
-        queryParameterRemote(0x0013A20042378B08, XBee::AtCommand::UnicastAttemptedCount);
-        queryParameterRemote(0x0013A20042378B08, XBee::AtCommand::TransmissionFailureCount);
-        queryParameterRemote(0x0013A20042378B08, XBee::AtCommand::MacAckFailureCount);
+        queryParameterRemote(0x0013A20042378B8F, XBee::AtCommand::SupplyVoltage);
+//        queryParameterRemote(0x0013A20042378B08, XBee::AtCommand::TransmissionFailureCount);
+//        queryParameterRemote(0x0013A20042378B08, XBee::AtCommand::MacAckFailureCount);
 
     }
 
@@ -181,7 +181,8 @@ void RadioModule::_handleRemoteAtCommandResponse(const uint8_t *frame, uint8_t l
         uint16_t voltage = frame[XBee::RemoteAtCommandResponse::BytesBeforeCommandData] << 8 |
                            frame[XBee::RemoteAtCommandResponse::BytesBeforeCommandData + 1];
 
-        log("voltage = %f mV", (float) voltage / 1000);
+        log("voltage = %f mV\n", (float) voltage / 1000);
+        return;
     }
 
     log("%c%c: ", (command & 0xFF00) >> 8, command & 0x00FF);

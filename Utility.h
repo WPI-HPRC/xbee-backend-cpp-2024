@@ -31,6 +31,8 @@ struct RocketTelemPacket
     float magZ = 0.0f;
     float pressure = 0.0f;
 
+    uint32_t servoPosition = 0;
+
     // Calculated Values
     float altitude = 0.0f;
 
@@ -70,6 +72,7 @@ struct RocketTelemPacket
             magY,
             magZ,
             pressure,
+            servoPosition,
             altitude,
             w,
             i,
@@ -92,9 +95,7 @@ struct RocketTelemPacket
             timestamp
     );
 };
-#pragma pack(pop)
 
-#pragma pack(push, 1)
 struct PayloadTelemPacket
 {
     // State Integer
@@ -226,7 +227,7 @@ struct PayloadTelemPacket
             p_loopCount
     );
 };
-#pragma pack(pop);
+#pragma pack(pop)
 
 #endif //XBEE_BACKEND_CPP_UTILITY_H
 

@@ -127,6 +127,9 @@ void RadioModule::incorrectChecksum(uint8_t calculated, uint8_t received)
 {
     std::string str = QString::asprintf("\nWRONG CHECKSUM. calculated: %02x, received: %02x\n\n", calculated & 0xFF,
                                         received & 0xFF).toStdString();
+
+    log(str.c_str());
+
     webServer->dataLogger.writeToByteFile(str.c_str(), str.length());
     webServer->dataLogger.writeToTextFile(str.c_str(), str.length());
 

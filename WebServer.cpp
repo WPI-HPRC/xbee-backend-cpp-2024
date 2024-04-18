@@ -5,6 +5,7 @@
 #include "WebServer.h"
 #include "Utility.h"
 #include <iostream>
+#include <regex>
 
 #define DEBUG false
 
@@ -118,6 +119,10 @@ void WebServer::dataReady(const uint8_t *data, size_t length_bytes)
         return;
     }
 
+
+    json = std::regex_replace(json, std::regex("nan"), "0");
+    json = std::regex_replace(json, std::regex("inf"), "0");
+
     dataLogger.dataReady(json.c_str(), packetType);
 
     broadcast(json.c_str());
@@ -143,6 +148,8 @@ void WebServer::dataReady(const uint8_t *data, size_t length_bytes, uint8_t rssi
         return;
     }
 
+    json = std::regex_replace(json, std::regex("nan"), "0");
+    json = std::regex_replace(json, std::regex("inf"), "0");
     dataLogger.dataReady(json.c_str(), packetType, rssi);
 
     broadcast(json.c_str());

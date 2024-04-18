@@ -160,12 +160,12 @@ void RadioModule::log(const char *format, ...)
 void RadioModule::didCycle()
 {
     return;
-    if (cycleCount % 50 == 0)
+    if (cycleCount % 500 == 0)
     {
 
-        queryParameterRemote(0x0013A20042378B8F, XBee::AtCommand::SupplyVoltage);
-//        queryParameterRemote(0x0013A20042378B08, XBee::AtCommand::TransmissionFailureCount);
-//        queryParameterRemote(0x0013A20042378B08, XBee::AtCommand::MacAckFailureCount);
+        queryParameterRemote(0x0013A20042378B8F, XBee::AtCommand::UnicastAttemptedCount);
+        queryParameterRemote(0x0013A20042378B8F, XBee::AtCommand::TransmissionFailureCount);
+        queryParameterRemote(0x0013A20042378B8F, XBee::AtCommand::MacAckFailureCount);
 
     }
 

@@ -5,7 +5,7 @@
 #ifndef XBEE_BACKEND_CPP_RADIOMODULE_H
 #define XBEE_BACKEND_CPP_RADIOMODULE_H
 
-#include "xbee/XBeeDevice.h"
+#include "XBee/XBeeDevice.h"
 #include "WebServer.h"
 #include "SerialPort.h"
 #include "hprcWebSocket.h"

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.27)
+cmake_minimum_required(VERSION 3.24)
 project(xbee_backend_cpp)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -13,8 +13,8 @@ find_package(Qt6 COMPONENTS
         REQUIRED)
 
 add_executable(xbee_backend_cpp main.cpp
-        xbee/XBeeDevice.cpp
-        xbee/XBeeDevice.h
+        XBee/XBeeDevice.cpp
+        XBee/XBeeDevice.h
         Utility.h
         WebServer.cpp
         WebServer.h
@@ -26,13 +26,13 @@ add_executable(xbee_backend_cpp main.cpp
         DataLogger.cpp
         DataLogger.h
         Constants.h
-        xbee/XBeeUtility.h
-        xbee/CircularBuffer.hpp
+        XBee/XBeeUtility.h
+        XBee/CircularBuffer.hpp
         RadioModule.cpp
         RadioModule.h
         SerialPort.cpp
         SerialPort.h
-        xbee/circularQueue.hpp
+        XBee/circularQueue.hpp
         hprcWebSocket.cpp
         hprcWebSocket.h
         Secrets.h)
@@ -41,5 +41,4 @@ target_link_libraries(xbee_backend_cpp
         Qt::Core
         Qt6::SerialPort
         Qt6::WebSockets
-        ${Boost_LIBRARIES}
 )

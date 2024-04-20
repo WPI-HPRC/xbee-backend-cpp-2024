@@ -5,8 +5,6 @@
 #include "RadioModule.h"
 #include <iostream>
 
-#include <format>
-
 #include <QSerialPort>
 #include <QSerialPortInfo>
 

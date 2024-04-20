@@ -47,7 +47,7 @@ void DataSimulator::sendNextLine()
     {
         jsonString.append(QString::asprintf(R"("%s":"%s",)", headers[i].toStdString().c_str(), values[i].toStdString().c_str()));
     }
-    jsonString.removeLast();
+    jsonString.remove(jsonString.length() - 1, 1);
     jsonString.append("}");
     _webServer->broadcast(jsonString);
 }

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "xbee/XBeeUtility.h"
+#include "XBee/XBeeUtility.h"
 #include <QObject>
 #include <QSerialPort>
 #include <QSerialPortInfo>
@@ -9,7 +9,7 @@
 
 #include "DataLogger.h"
 
-#include "xbee/circularQueue.hpp"
+#include "XBee/circularQueue.hpp"
 
 #define SERIAL_PORT_READ_BUF_SIZE 65536
 

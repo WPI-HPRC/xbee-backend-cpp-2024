@@ -18,7 +18,7 @@ struct RocketTelemPacket
     // 4 - MainDescent
     // 5 - Recovery
     // 6 - Abort
-    uint8_t state;
+    uint8_t state = 0;
     // Raw Sensor Readings
     float accelX = 0.0f;
     float accelY = 0.0f;
@@ -26,15 +26,18 @@ struct RocketTelemPacket
     float gyroX = 0.0f;
     float gyroY = 0.0f;
     float gyroZ = 0.0f;
-    float magX = 0.0f;
-    float magY = 0.0f;
-    float magZ = 0.0f;
+    float rawMagX = 0.0f;
+    float rawMagY = 0.0f;
+    float rawMagZ = 0.0f;
     float pressure = 0.0f;
 
     uint32_t servoPosition = 0;
 
     // Calculated Values
     float altitude = 0.0f;
+    float magX = 0.0f;
+    float magY = 0.0f;
+    float magZ = 0.0f;
 
     // EKF Results
     float w = 0.0f; // Quaternion State
@@ -68,12 +71,15 @@ struct RocketTelemPacket
             gyroX,
             gyroY,
             gyroZ,
-            magX,
-            magY,
-            magZ,
+            rawMagX,
+            rawMagY,
+            rawMagZ,
             pressure,
             servoPosition,
             altitude,
+            magX,
+            magY,
+            magZ,
             w,
             i,
             j,

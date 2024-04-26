@@ -117,7 +117,7 @@ void RadioModule::handleReceivePacket(XBee::ReceivePacket::Struct *frame)
 
 void RadioModule::handleReceivePacket64Bit(XBee::ReceivePacket64Bit::Struct *frame)
 {
-    std::cout << "RSSI: -" << std::dec << (int) (frame->negativeRssi & 0xFF) << "dbm\n";
+//    std::cout << "RSSI: -" << std::dec << (int) (frame->negativeRssi & 0xFF) << "dbm\n";
     webServer->dataReady(frame->data, frame->dataLength_bytes, frame->negativeRssi);
 }
 
@@ -158,14 +158,14 @@ void RadioModule::log(const char *format, ...)
 void RadioModule::didCycle()
 {
 //    return;
-    cycleCount++;
-    if (cycleCount % 500 == 0)
+    if (cycleCount % 200 == 0)
     {
-//        queryParameterRemote(0x0013A200422CDAC2, XBee::AtCommand::SupplyVoltage);
-        return;
+        queryParameterRemote(0x0013A200422CDAC2, XBee::AtCommand::Temperature);
+        /*
         queryParameterRemote(0x0013A20042378B8F, XBee::AtCommand::UnicastAttemptedCount);
         queryParameterRemote(0x0013A20042378B8F, XBee::AtCommand::TransmissionFailureCount);
         queryParameterRemote(0x0013A20042378B8F, XBee::AtCommand::MacAckFailureCount);
+         */
 
     }
 }

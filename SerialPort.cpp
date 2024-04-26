@@ -10,10 +10,7 @@ SerialPort::SerialPort(QSerialPortInfo port, QSerialPort::BaudRate baudRate, Dat
         dataLogger)
 {
     readQueue = circularQueueCreate<uint8_t>(65536);
-    logFile = new QFile("/Users/will/Desktop/log.txt");
-
-    logFile->open(QIODeviceBase::WriteOnly);
-
+    
     m_serialPort = new QSerialPort();
 
     m_serialPort->setBaudRate(baudRate);

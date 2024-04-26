@@ -41,9 +41,7 @@ public:
     void read(uint8_t *buffer, size_t length_bytes);
 
     int packetsNotYetRead = 0;
-
-    QFile *logFile;
-
+    
     int currentFrameBytesLeftToRead = -1;
 
 public slots:

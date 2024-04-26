@@ -133,8 +133,6 @@ void RadioModule::incorrectChecksum(uint8_t calculated, uint8_t received)
 
     webServer->dataLogger.flushByteFile();
     webServer->dataLogger.flushTextFile();
-
-    serialPort->logFile->write(str.c_str(), (qint64) str.length());
 }
 
 void RadioModule::log(const char *format, ...)
@@ -160,7 +158,9 @@ void RadioModule::didCycle()
 //    return;
     if (cycleCount % 200 == 0)
     {
-        queryParameterRemote(0x0013A200422CDAC2, XBee::AtCommand::Temperature);
+//        queryParameterRemote(0x0013A200422CDAC2, XBee::AtCommand::Temperature);
+        queryParameterRemote(0x0013A200422CDAC4, XBee::AtCommand::Temperature);
+
         /*
         queryParameterRemote(0x0013A20042378B8F, XBee::AtCommand::UnicastAttemptedCount);
         queryParameterRemote(0x0013A20042378B8F, XBee::AtCommand::TransmissionFailureCount);
@@ -168,6 +168,7 @@ void RadioModule::didCycle()
          */
 
     }
+    cycleCount++;
 }
 
 void RadioModule::_handleRemoteAtCommandResponse(const uint8_t *frame, uint8_t length_bytes, bool paramWasBeingWaitedOn)

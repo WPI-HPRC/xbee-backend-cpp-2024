@@ -157,17 +157,17 @@ void RadioModule::log(const char *format, ...)
 
 void RadioModule::didCycle()
 {
-    return;
+//    return;
+    cycleCount++;
     if (cycleCount % 500 == 0)
     {
-
+//        queryParameterRemote(0x0013A200422CDAC2, XBee::AtCommand::SupplyVoltage);
+        return;
         queryParameterRemote(0x0013A20042378B8F, XBee::AtCommand::UnicastAttemptedCount);
         queryParameterRemote(0x0013A20042378B8F, XBee::AtCommand::TransmissionFailureCount);
         queryParameterRemote(0x0013A20042378B8F, XBee::AtCommand::MacAckFailureCount);
 
     }
-
-    cycleCount++;
 }
 
 void RadioModule::_handleRemoteAtCommandResponse(const uint8_t *frame, uint8_t length_bytes, bool paramWasBeingWaitedOn)

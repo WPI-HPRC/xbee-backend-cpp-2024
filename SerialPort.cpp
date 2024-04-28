@@ -6,11 +6,12 @@
 
 #define DEBUG false
 
-SerialPort::SerialPort(QSerialPortInfo port, QSerialPort::BaudRate baudRate, DataLogger *dataLogger) : dataLogger(
-        dataLogger)
+SerialPort::SerialPort(QSerialPortInfo port, QSerialPort::BaudRate baudRate, DataLogger *dataLogger,
+                       XBee::ApiOptions::ApiOptions apiOptions) : dataLogger(
+        dataLogger), apiOptions(apiOptions)
 {
     readQueue = circularQueueCreate<uint8_t>(65536);
-    
+
     m_serialPort = new QSerialPort();
 
     m_serialPort->setBaudRate(baudRate);
@@ -148,6 +149,7 @@ void SerialPort::readyRead()
     {
         char c = readBuffer[i];
 
+        // Just for logging purposes
         if (!(currentFrameBytesLeftToRead > 0 || c == XBee::StartDelimiter))
         {
             std::string str = QString::asprintf("%02x\n", c & 0xFF).toStdString();
@@ -156,7 +158,8 @@ void SerialPort::readyRead()
 
         if (currentFrameBytesLeftToRead > 0 || c == XBee::StartDelimiter)
         {
-            if (currentFrameBytesLeftToRead <= 0)
+            if ((currentFrameBytesLeftToRead <= 0) ||
+                (apiOptions == XBee::ApiOptions::ApiWithEscapes && c == XBee::StartDelimiter))
             {
                 currentFrameByteIndex = 0;
                 currentFrameBytesLeftToRead = 3;
@@ -164,9 +167,25 @@ void SerialPort::readyRead()
 
             for (; i < bytes_transferred && currentFrameBytesLeftToRead > 0; i++)
             {
-                currentFrame[currentFrameByteIndex++] = (uint8_t) readBuffer[i];
+                auto byte = (uint8_t) readBuffer[i];
 
-                std::string str = QString::asprintf("%02x ", readBuffer[i] & 0xFF).toStdString();
+                if (apiOptions == XBee::ApiOptions::ApiWithEscapes)
+                {
+                    if (byte == XBee::EscapeCharacter)
+                    {
+                        nextByteIsEscaped = true;
+                        continue;
+                    }
+                }
+                if (nextByteIsEscaped)
+                {
+                    byte = byte ^ XBee::EscapeXorByte;
+                    nextByteIsEscaped = false;
+                }
+
+                currentFrame[currentFrameByteIndex++] = byte;
+
+                std::string str = QString::asprintf("%02x ", byte & 0xFF).toStdString();
                 dataLogger->writeToByteFile(str.c_str(), (qint64) str.length());
 
                 currentFrameBytesLeftToRead -= 1;
@@ -180,10 +199,14 @@ void SerialPort::readyRead()
 
         if (currentFrameBytesLeftToRead == 0)
         {
+//            std::cout << "Frame: ";
+
             for (int j = 0; j < currentFrame[2] + 4; j++)
             {
+//                std::cout << std::hex << std::setfill('0') << std::setw(2) << (int) (currentFrame[j] & 0xFF) << " ";
                 circularQueuePush(readQueue, currentFrame[j]);
             }
+//            std::cout << std::endl;
             packetsNotYetRead += 1;
             currentFrameBytesLeftToRead = -1;
 

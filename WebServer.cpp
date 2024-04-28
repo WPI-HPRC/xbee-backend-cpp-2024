@@ -117,7 +117,7 @@ void WebServer::dataReady(const uint8_t *data, size_t length_bytes)
     }
     else
     {
-        qDebug() << "Unrecognized: " << Qt::hex << (int) (data[0] & 0xFF);
+//        qDebug() << "Unrecognized: " << Qt::hex << (int) (data[0] & 0xFF);
         return;
     }
 

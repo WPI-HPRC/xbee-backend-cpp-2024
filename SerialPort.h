@@ -32,17 +32,22 @@ private:
 
     DataLogger *dataLogger;
 
+    bool nextByteIsEscaped = false;
+
 public:
 
-    SerialPort(QSerialPortInfo port, QSerialPort::BaudRate baudRate, DataLogger *dataLogger);
+    SerialPort(QSerialPortInfo port, QSerialPort::BaudRate baudRate, DataLogger *dataLogger,
+               XBee::ApiOptions::ApiOptions apiOptions);
 
     int write(const char *buf, const int &size);
 
     void read(uint8_t *buffer, size_t length_bytes);
 
     int packetsNotYetRead = 0;
-    
+
     int currentFrameBytesLeftToRead = -1;
+
+    XBee::ApiOptions::ApiOptions apiOptions;
 
 public slots:
 

@@ -8,7 +8,7 @@
 #include <QSerialPort>
 #include <QSerialPortInfo>
 
-#define DEBUG_SERIAL false
+#define DEBUG_SERIAL true
 
 QSerialPortInfo getTargetPort()
 {
@@ -18,7 +18,7 @@ QSerialPortInfo getTargetPort()
 
 #if DEBUG_SERIAL
     std::cout << "Available baud rates: \n";
-    for(auto &baudRate : QSerialPortInfo::standardBaudRates())
+    for (auto &baudRate: QSerialPortInfo::standardBaudRates())
     {
         std::cout << "\t" << baudRate << "\n";
     }
@@ -36,7 +36,8 @@ QSerialPortInfo getTargetPort()
         std::cout.flush();
 #endif
 
-        if (!port.portName().contains("cu.") && port.manufacturer().contains("Digi"))
+        if (!port.portName().contains("cu.") && port.manufacturer().contains("Digi") ||
+            port.manufacturer().contains("FTDI"))
         {
             targetPort = port;
         }
@@ -57,7 +58,8 @@ RadioModule::RadioModule() : XBeeDevice()
 
     webServer = new WebServer(8001);
 
-    serialPort = new SerialPort(targetPort, QSerialPort::Baud115200, &webServer->dataLogger);
+    serialPort = new SerialPort(targetPort, QSerialPort::Baud115200, &webServer->dataLogger,
+                                XBee::ApiOptions::ApiWithEscapes);
 
 
     sendTransmitRequestsImmediately = true;
@@ -158,14 +160,19 @@ void RadioModule::didCycle()
 //    return;
     if (cycleCount % 200 == 0)
     {
-//        queryParameterRemote(0x0013A200422CDAC2, XBee::AtCommand::Temperature);
-        queryParameterRemote(0x0013A200422CDAC4, XBee::AtCommand::Temperature);
 
-        /*
-        queryParameterRemote(0x0013A20042378B8F, XBee::AtCommand::UnicastAttemptedCount);
-        queryParameterRemote(0x0013A20042378B8F, XBee::AtCommand::TransmissionFailureCount);
-        queryParameterRemote(0x0013A20042378B8F, XBee::AtCommand::MacAckFailureCount);
-         */
+//        std::string str = "Hello, World!Hello, World!Hello, World!Hello, World!Hello, World!Hello, World!Hello, World!Hello, World!Hello, World!Hello, World!";
+//        sendTransmitRequestCommand(0x0013A200423F474C, (uint8_t *) str.c_str(), str.length());
+//        queryParameter(XBee::AtCommand::Temperature);
+//        queryParameterRemote(0x0013A200422CDAC2, XBee::AtCommand::Temperature);
+//        queryParameterRemote(0x0013A200422CDAC4, XBee::AtCommand::Temperature);
+
+
+        queryParameterRemote(0x0013A200422CDF59, XBee::AtCommand::UnicastAttemptedCount);
+        queryParameterRemote(0x0013A200422CDF59, XBee::AtCommand::TransmissionFailureCount);
+        queryParameterRemote(0x0013A200422CDF59, XBee::AtCommand::MacAckFailureCount);
+
+//        queryParameterRemote(0x0013A2FE643CA484, XBee::AtCommand::Temperature);
 
     }
     cycleCount++;

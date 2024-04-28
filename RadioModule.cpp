@@ -58,7 +58,7 @@ RadioModule::RadioModule() : XBeeDevice()
 
     webServer = new WebServer(8001);
 
-    serialPort = new SerialPort(targetPort, QSerialPort::Baud115200, &webServer->dataLogger,
+    serialPort = new SerialPort(targetPort, 921600, &webServer->dataLogger,
                                 XBee::ApiOptions::ApiWithEscapes);
 
 
@@ -168,9 +168,9 @@ void RadioModule::didCycle()
 //        queryParameterRemote(0x0013A200422CDAC4, XBee::AtCommand::Temperature);
 
 
-        queryParameterRemote(0x0013A200422CDF59, XBee::AtCommand::UnicastAttemptedCount);
-        queryParameterRemote(0x0013A200422CDF59, XBee::AtCommand::TransmissionFailureCount);
-        queryParameterRemote(0x0013A200422CDF59, XBee::AtCommand::MacAckFailureCount);
+//        queryParameterRemote(0x0013A200422CDF59, XBee::AtCommand::UnicastAttemptedCount);
+//        queryParameterRemote(0x0013A200422CDF59, XBee::AtCommand::TransmissionFailureCount);
+//        queryParameterRemote(0x0013A200422CDF59, XBee::AtCommand::MacAckFailureCount);
 
 //        queryParameterRemote(0x0013A2FE643CA484, XBee::AtCommand::Temperature);
 

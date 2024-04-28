@@ -6,7 +6,7 @@
 
 #define DEBUG false
 
-SerialPort::SerialPort(QSerialPortInfo port, QSerialPort::BaudRate baudRate, DataLogger *dataLogger,
+SerialPort::SerialPort(QSerialPortInfo port, int baudRate, DataLogger *dataLogger,
                        XBee::ApiOptions::ApiOptions apiOptions) : dataLogger(
         dataLogger), apiOptions(apiOptions)
 {

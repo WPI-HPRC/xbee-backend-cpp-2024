@@ -36,7 +36,7 @@ private:
 
 public:
 
-    SerialPort(QSerialPortInfo port, QSerialPort::BaudRate baudRate, DataLogger *dataLogger,
+    SerialPort(QSerialPortInfo port, int baudRate, DataLogger *dataLogger,
                XBee::ApiOptions::ApiOptions apiOptions);
 
     int write(const char *buf, const int &size);

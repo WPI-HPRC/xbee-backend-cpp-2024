@@ -102,7 +102,103 @@ struct RocketTelemPacket
     );
 };
 
+//#pragma pack(push, 1)
+struct PayloadTelemPacket
+{
+    // State Integer
+    // 0 - PreLaunch
+    // 1 - Launch
+    // 2 - Coast
+    // 3 - DrogueDescent
+    // 4 - MainDescent
+    // 5 - Recovery
+    // 6 - Abort
+    uint8_t p_state = 0;
+    // Raw Sensor Readings
+    float p_accelX = 0.0f;
+    float p_accelY = 0.0f;
+    float p_accelZ = 0.0f;
+    float p_gyroX = 0.0f;
+    float p_gyroY = 0.0f;
+    float p_gyroZ = 0.0f;
+    float p_rawMagX = 0.0f;
+    float p_rawMagY = 0.0f;
+    float p_rawMagZ = 0.0f;
+    float p_pressure = 0.0f;
 
+    uint32_t p_servoPosition = 0;
+
+    // Calculated Values
+    float p_altitude = 0.0f;
+    float p_magX = 0.0f;
+    float p_magY = 0.0f;
+    float p_magZ = 0.0f;
+
+    // EKF Results
+    float p_w = 0.0f; // Quaternion State
+    float p_i = 0.0f;
+    float p_j = 0.0f;
+    float p_k = 0.0f;
+    float p_posX = 0.0f; // Position State ECEF
+    float p_posY = 0.0f;
+    float p_posZ = 0.0f;
+    float p_velX = 0.0f; // Velocity State ECEF
+    float p_velY = 0.0f;
+    float p_velZ = 0.0f;
+
+    // GPS Inputs
+    float p_gpsLat = 0.0f;
+    float p_gpsLong = 0.0f;
+    float p_gpsAltMSL = 0.0f;
+    float p_gpsAltAGL = 0.0f;
+    uint32_t p_epochTime = 0;
+    uint8_t p_satellites = 0;
+    bool p_gpsLock = false;
+
+    uint32_t p_loopCount = 0;
+    uint32_t p_timestamp = 0;
+
+    JS_OBJ(
+            p_state,
+            p_accelX,
+            p_accelY,
+            p_accelZ,
+            p_gyroX,
+            p_gyroY,
+            p_gyroZ,
+            p_rawMagX,
+            p_rawMagY,
+            p_rawMagZ,
+            p_pressure,
+            p_servoPosition,
+            p_altitude,
+            p_magX,
+            p_magY,
+            p_magZ,
+            p_w,
+            p_i,
+            p_j,
+            p_k,
+            p_posX,
+            p_posY,
+            p_posZ,
+            p_velX,
+            p_velY,
+            p_velZ,
+            p_gpsLat,
+            p_gpsLong,
+            p_gpsAltMSL,
+            p_gpsAltAGL,
+            p_epochTime,
+            p_satellites,
+            p_gpsLock,
+            p_loopCount,
+            p_timestamp
+    );
+};
+#pragma pack(pop)
+
+/*
 struct PayloadTelemPacket
 {
     // State Integer
@@ -235,6 +331,7 @@ struct PayloadTelemPacket
     );
 };
 #pragma pack(pop)
+ */
 
 #endif //XBEE_BACKEND_CPP_UTILITY_H
 

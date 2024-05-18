@@ -42,6 +42,7 @@ public:
         {
             _write(headers.join(",").append("\n"));
             hasWrittenHeaders = true;
+            qDebug() << "Wrote headers";
         }
 
         QString valueLine = "";
@@ -73,6 +74,7 @@ private:
         }
 #else
         file.write(data.toUtf8());
+        file.flush();
 #endif
 
     }

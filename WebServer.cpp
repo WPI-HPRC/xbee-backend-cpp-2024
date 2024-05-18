@@ -109,15 +109,17 @@ void WebServer::dataReady(const uint8_t *data, size_t length_bytes)
     {
         json = JS::serializeStruct(*(RocketTelemPacket *) (&data[1]));
         packetType = DataLogger::Rocket;
+//        qDebug() << "Rocket";
     }
     else if (data[0] == 0x02) // Payload packet
     {
         json = JS::serializeStruct(*(PayloadTelemPacket *) (&data[1]));
         packetType = DataLogger::Payload;
+//        qDebug() << "Payload";
     }
     else
     {
-//        qDebug() << "Unrecognized: " << Qt::hex << (int) (data[0] & 0xFF);
+        qDebug() << "Unrecognized: " << Qt::hex << (int) (data[0] & 0xFF);
         return;
     }
 
@@ -162,6 +164,7 @@ void WebServer::broadcast(const QString &str)
     serverSocket->m_socket->sendTextMessage(str);
     for (WebSocket *socket: clients)
     {
+//        qDebug() << "Sending";
         socket->sendData(str);
     }
 }

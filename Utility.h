@@ -8,6 +8,7 @@
 #include "json_struct.h"
 
 #pragma pack(push, 1)
+/*
 struct RocketTelemPacket
 {
     // State Integer
@@ -101,8 +102,17 @@ struct RocketTelemPacket
             timestamp
     );
 };
+*/
+struct RocketTelemPacket
+{
+    uint32_t epochTime = 0;
+    JS_OBJ(
+            epochTime
+            );
+};
 
 //#pragma pack(push, 1)
+
 struct PayloadTelemPacket
 {
     // State Integer
@@ -196,6 +206,17 @@ struct PayloadTelemPacket
             p_timestamp
     );
 };
+
+/*
+struct PayloadTelemPacket
+{
+    uint32_t p_epochTime = 0;
+    JS_OBJ(
+            p_epochTime
+            );
+};
+*/
+
 #pragma pack(pop)
 
 /*

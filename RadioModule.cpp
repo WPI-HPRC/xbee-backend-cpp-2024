@@ -66,7 +66,7 @@ RadioModule::RadioModule() : XBeeDevice()
 
     sendFramesImmediately = true;
 
-    logWrongChecksums = false;
+    logWrongChecksums = true;
 //    queryParameterRemote(0x0013a200422cdf59, XBee::AtCommand::SupplyVoltage);
 
 //    queryParameter(XBee::AtCommand::ChannelMask);
@@ -119,7 +119,7 @@ void RadioModule::handleReceivePacket(XBee::ReceivePacket::Struct *frame)
 
 void RadioModule::handleReceivePacket64Bit(XBee::ReceivePacket64Bit::Struct *frame)
 {
-//    std::cout << "RSSI: -" << std::dec << (int) (frame->negativeRssi & 0xFF) << "dbm\n";
+    std::cout << "RSSI: -" << std::dec << (int) (frame->negativeRssi & 0xFF) << "dbm\n";
     webServer->dataReady(frame->data, frame->dataLength_bytes, frame->negativeRssi);
 }
 
@@ -129,6 +129,8 @@ void RadioModule::incorrectChecksum(uint8_t calculated, uint8_t received)
                                         received & 0xFF).toStdString();
 
     log(str.c_str());
+
+    qDebug() << QString::fromStdString(str);
 
     webServer->dataLogger.writeToByteFile(str.c_str(), str.length());
     webServer->dataLogger.writeToTextFile(str.c_str(), str.length());

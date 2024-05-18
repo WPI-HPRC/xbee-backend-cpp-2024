@@ -58,8 +58,8 @@ RadioModule::RadioModule() : XBeeDevice()
 
     webServer = new WebServer(8001);
 
-    serialPort = new SerialPort(targetPort, 921600, &webServer->dataLogger,
-                                XBee::ApiOptions::ApiWithEscapes);
+    serialPort = new SerialPort(targetPort, 115200, &webServer->dataLogger,
+                                XBee::ApiOptions::ApiWithoutEscapes);
 
 
     sendTransmitRequestsImmediately = true;
@@ -158,11 +158,12 @@ void RadioModule::log(const char *format, ...)
 void RadioModule::didCycle()
 {
 //    return;
-    if (cycleCount % 200 == 0)
+    if (cycleCount % 5 == 0)
     {
+        dummyPacket.timestamp = cycleCount / 5;
+        sendTransmitRequestCommand(0x0013A200423F474C, (uint8_t *) &dummyPacket, sizeof(dummyPacket));
 
 //        std::string str = "Hello, World!Hello, World!Hello, World!Hello, World!Hello, World!Hello, World!Hello, World!Hello, World!Hello, World!Hello, World!";
-//        sendTransmitRequestCommand(0x0013A200423F474C, (uint8_t *) str.c_str(), str.length());
 //        queryParameter(XBee::AtCommand::Temperature);
 //        queryParameterRemote(0x0013A200422CDAC2, XBee::AtCommand::Temperature);
 //        queryParameterRemote(0x0013A200422CDAC4, XBee::AtCommand::Temperature);

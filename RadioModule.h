@@ -44,6 +44,8 @@ public:
     unsigned int cycleCount = 0;
 
     uint64_t avBayAddr = 0x0013a200422cdf59;
+
+    RocketTelemPacket dummyPacket;
 };
 
 

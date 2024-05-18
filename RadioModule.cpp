@@ -58,7 +58,7 @@ RadioModule::RadioModule() : XBeeDevice()
 
     webServer = new WebServer(8001);
 
-    serialPort = new SerialPort(targetPort, 115200, &webServer->dataLogger,
+    serialPort = new SerialPort(targetPort, 921600, &webServer->dataLogger,
                                 XBee::ApiOptions::ApiWithoutEscapes);
 
 
@@ -87,6 +87,7 @@ void RadioModule::writeBytes(const char *data, size_t length_bytes)
 {
     int bytes_written = serialPort->write(data, (int) length_bytes);
 
+
     webServer->dataLogger.writeToTextFile("Writing: ");
     for (int i = 0; i < length_bytes; i++)
     {
@@ -100,6 +101,7 @@ void RadioModule::writeBytes(const char *data, size_t length_bytes)
     {
         log("FAILED TO WRITE ALL BYTES. EXPECTED %d, RECEIVED %d", length_bytes, bytes_written);
     }
+
 }
 
 void RadioModule::packetRead()
@@ -143,6 +145,7 @@ void RadioModule::log(const char *format, ...)
     va_start(args, format);
 
     vprintf(format, args);
+    fflush(stdout);
 
     char buff[256];
     vsnprintf(buff, sizeof(buff), format, args);

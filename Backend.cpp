@@ -23,7 +23,7 @@ Backend::Backend(QObject *parent) : QObject(parent)
     radioModule = new RadioModule();
 
     timer = new QTimer();
-    timer->setInterval(10);
+    timer->setInterval(1);
     connect(timer, &QTimer::timeout, [this]()
             {
                 this->radioModule->doCycle();

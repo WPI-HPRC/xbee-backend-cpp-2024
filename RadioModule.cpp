@@ -59,7 +59,7 @@ RadioModule::RadioModule() : XBeeDevice()
     webServer = new WebServer(8001);
 
     serialPort = new SerialPort(targetPort, 921600, &webServer->dataLogger,
-                                XBee::ApiOptions::ApiWithEscapes);
+                                XBee::ApiOptions::ApiWithoutEscapes);
 
 
     sendTransmitRequestsImmediately = true;
@@ -157,7 +157,7 @@ void RadioModule::log(const char *format, ...)
 
 void RadioModule::didCycle()
 {
-//    return;
+    return;
     if (cycleCount % 200 == 0)
     {
 

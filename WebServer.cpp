@@ -20,7 +20,7 @@ WebServer::WebServer(int port, QObject *parent) : QObject(parent), port(port),
 
     serverSocket->connectToServer();
 
-    server.listen(QHostAddress::LocalHost, port);
+    server.listen(QHostAddress::Any, port);
 
     std::cout << "Started local server on " << server.serverAddress().toString().toStdString() << ":"
               << server.serverPort() << std::endl;

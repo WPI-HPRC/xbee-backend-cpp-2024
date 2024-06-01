@@ -20,13 +20,16 @@ Backend::Backend(QObject *parent) : QObject(parent)
     return;
 #else
 
-    radioModule = new RadioModule();
+    radioModules.append(new RadioModule());
 
     timer = new QTimer();
     timer->setInterval(5);
     connect(timer, &QTimer::timeout, [this]()
             {
-                this->radioModule->doCycle();
+                for (auto radioModule: this->radioModules)
+                {
+                    radioModule->doCycle();
+                }
             }
     );
     timer->start();

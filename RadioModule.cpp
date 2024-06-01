@@ -9,6 +9,7 @@
 #include <QSerialPortInfo>
 
 #define DEBUG_SERIAL true
+#define REQUIRE_XBEE_MODULE false
 
 QSerialPortInfo getTargetPort()
 {
@@ -46,36 +47,39 @@ QSerialPortInfo getTargetPort()
     return targetPort;
 }
 
-RadioModule::RadioModule() : XBeeDevice()
+void RadioModule::configureRadio()
 {
-    QSerialPortInfo targetPort = getTargetPort();
+//    setParameter(XBee::AtCommand::ApiOptions, 0x02);
+//    setParameterRemote(, XBee::AtCommand::PowerLevel, 0x02);
+}
 
-    if (targetPort.isNull())
-    {
-        qDebug() << "Couldn't find radio module";
-        exit(1);
-    }
-
+RadioModule::RadioModule(int baudRate, const QSerialPortInfo &portInfo) : XBeeDevice()
+{
     webServer = new WebServer(8001);
 
     serialPort = new SerialPort(targetPort, 921600, &webServer->dataLogger,
                                 XBee::ApiOptions::ApiWithoutEscapes);
-
 
     sendTransmitRequestsImmediately = true;
 
     sendFramesImmediately = true;
 
     logWrongChecksums = false;
-//    queryParameterRemote(0x0013a200422cdf59, XBee::AtCommand::SupplyVoltage);
+}
 
-//    queryParameter(XBee::AtCommand::ChannelMask);
-//    queryParameter(XBee::AtCommand::MinimumFrequencies);
+RadioModule::RadioModule(int baudRate) : XBeeDevice()
+{
+    QSerialPortInfo targetPort = getTargetPort();
 
-//    setParameter(XBee::AtCommand::ApiOptions, 0x02);
-//    setParameterRemote(, XBee::AtCommand::PowerLevel, 0x02);
-//    queryParameterRemote(0x0013A20042378B08, XBee::AtCommand::PowerLevel);
-//    sendNodeDiscoveryCommand();
+#if REQUIRE_XBEE_MODULE
+    if (targetPort.isNull())
+    {
+        qDebug() << "Couldn't find radio module";
+        exit(1);
+    }
+#endif
+
+    *this = RadioModule(baudRate, targetPort);
 }
 
 void RadioModule::start()

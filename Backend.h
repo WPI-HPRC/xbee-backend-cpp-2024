@@ -23,7 +23,7 @@ private:
     DataSimulator *dataSimulator;
     DataLogger *dataLogger;
 
-    RadioModule *radioModule;
+    QList<RadioModule *> radioModules;
     QTimer *timer;
 
 };

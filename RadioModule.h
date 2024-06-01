@@ -14,11 +14,15 @@
 class RadioModule : public XBeeDevice
 {
 public:
-    RadioModule();
+    RadioModule(int baudRate, const QSerialPortInfo &portInfo);
+
+    RadioModule(int baudRate);
 
     WebServer *webServer;
 
     SerialPort *serialPort;
+
+    void configureRadio();
 
     void readBytes(uint8_t *buffer, size_t length_bytes) override;
 

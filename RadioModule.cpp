@@ -5,11 +5,7 @@
 #include "RadioModule.h"
 #include <iostream>
 
-#include <QSerialPort>
 #include <QSerialPortInfo>
-
-#define DEBUG_SERIAL true
-#define REQUIRE_XBEE_MODULE false
 
 QSerialPortInfo getTargetPort()
 {
@@ -17,7 +13,7 @@ QSerialPortInfo getTargetPort()
 
     QSerialPortInfo targetPort;
 
-#if DEBUG_SERIAL
+#ifdef DEBUG_SERIAL
     std::cout << "Available baud rates: \n";
     for (auto &baudRate: QSerialPortInfo::standardBaudRates())
     {
@@ -29,7 +25,7 @@ QSerialPortInfo getTargetPort()
 
     for (auto &port: serialPorts)
     {
-#if DEBUG_SERIAL
+#ifdef DEBUG_SERIAL
         std::cout << "\n" << port.portName().toStdString() << "\n";
         std::cout << "\tManufacturer: " << port.manufacturer().toStdString() << "\n";
         std::cout << "\tSystem location: " << port.systemLocation().toStdString() << "\n";
@@ -57,7 +53,7 @@ RadioModule::RadioModule(int baudRate, const QSerialPortInfo &portInfo) : XBeeDe
 {
     webServer = new WebServer(8001);
 
-    serialPort = new SerialPort(targetPort, 921600, &webServer->dataLogger,
+    serialPort = new SerialPort(portInfo, 921600, &webServer->dataLogger,
                                 XBee::ApiOptions::ApiWithoutEscapes);
 
     sendTransmitRequestsImmediately = true;
@@ -71,7 +67,7 @@ RadioModule::RadioModule(int baudRate) : XBeeDevice()
 {
     QSerialPortInfo targetPort = getTargetPort();
 
-#if REQUIRE_XBEE_MODULE
+#ifdef REQUIRE_XBEE_MODULE
     if (targetPort.isNull())
     {
         qDebug() << "Couldn't find radio module";
@@ -89,8 +85,13 @@ void RadioModule::start()
 
 void RadioModule::writeBytes(const char *data, size_t length_bytes)
 {
+#ifndef REQUIRE_XBEE_MODULE
+    if(!serialPort->isOpen())
+    {
+        return;
+    }
+#endif
     int bytes_written = serialPort->write(data, (int) length_bytes);
-
 
     webServer->dataLogger.writeToTextFile("Writing: ");
     for (int i = 0; i < length_bytes; i++)
@@ -103,7 +104,7 @@ void RadioModule::writeBytes(const char *data, size_t length_bytes)
 
     if (bytes_written != length_bytes)
     {
-        log("FAILED TO WRITE ALL BYTES. EXPECTED %d, RECEIVED %d", length_bytes, bytes_written);
+        log("FAILED TO WRITE ALL BYTES. EXPECTED %d, RECEIVED %d\n", length_bytes, bytes_written);
     }
 
 }

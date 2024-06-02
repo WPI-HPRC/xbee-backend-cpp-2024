@@ -23,6 +23,14 @@ SerialPort::SerialPort(QSerialPortInfo port, int baudRate, DataLogger *dataLogge
 
     m_serialPort->setReadBufferSize(SERIAL_PORT_READ_BUF_SIZE);
 
+#ifndef REQUIRE_XBEE_MODULE
+    if (port.isNull())
+    {
+        std::cout << "No port to open." << std::endl;
+        return;
+    }
+#endif
+
     if (m_serialPort->open(QIODevice::ReadWrite))
     {
         std::cout << "Opened serial port " << port.manufacturer().toStdString() << " - "
@@ -36,6 +44,11 @@ SerialPort::SerialPort(QSerialPortInfo port, int baudRate, DataLogger *dataLogge
     }
 
     std::cout.flush();
+}
+
+bool SerialPort::isOpen()
+{
+    return m_serialPort->isOpen();
 }
 
 void SerialPort::connectSignals()

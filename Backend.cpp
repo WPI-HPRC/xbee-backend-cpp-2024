@@ -20,7 +20,7 @@ Backend::Backend(QObject *parent) : QObject(parent)
     return;
 #else
 
-    radioModules.append(new RadioModule());
+    radioModules.append(new RadioModule(115200));
 
     timer = new QTimer();
     timer->setInterval(5);

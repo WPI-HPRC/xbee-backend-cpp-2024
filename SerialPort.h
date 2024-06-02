@@ -11,6 +11,8 @@
 
 #include "XBee/circularQueue.hpp"
 
+//#define DEBUG_SERIAL
+//#define REQUIRE_XBEE_MODULE
 #define SERIAL_PORT_READ_BUF_SIZE 65536
 
 class SerialPort : public QObject
@@ -42,6 +44,8 @@ public:
     int write(const char *buf, const int &size);
 
     void read(uint8_t *buffer, size_t length_bytes);
+
+    bool isOpen();
 
     int packetsNotYetRead = 0;
 

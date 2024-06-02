@@ -50,13 +50,7 @@ public:
     WebServer(int port, QObject *parent = nullptr);
 
     int port;
-
-    void dataReady(const uint8_t *data, size_t length_bytes);
-
-    void dataReady(const uint8_t *data, size_t length_bytes, uint8_t rssi);
-
-    DataLogger dataLogger;
-
+    
     void broadcast(const QString &str);
 
     HPRCWebSocket *serverSocket;

@@ -4,6 +4,7 @@
 
 #include "RadioModule.h"
 #include <iostream>
+#include <regex>
 
 #include <QSerialPortInfo>
 
@@ -43,17 +44,47 @@ QSerialPortInfo getTargetPort()
     return targetPort;
 }
 
+DataLogger::Packet parsePacket(const uint8_t *frame)
+{
+    std::string str;
+
+    // This way of assigning the packet type seems redundant, but the packetType byte can take on any value from 0-255; we want to set it to an enum value that we understand
+    DataLogger::PacketType packetType;
+
+    switch (frame[0])
+    {
+        case DataLogger::Rocket:
+            str = JS::serializeStruct(*(RocketTelemPacket *) (&frame[1]));
+            packetType = DataLogger::Rocket;
+            break;
+        case DataLogger::Payload:
+            str = JS::serializeStruct(*(PayloadTelemPacket *) (&frame[1]));
+            packetType = DataLogger::Payload;
+            break;
+        default:
+            str = "";
+            packetType = DataLogger::Unknown;
+            break;
+    }
+
+    str = std::regex_replace(str, std::regex("nan"), "0");
+    str = std::regex_replace(str, std::regex("inf"), "0");
+
+    return {str, packetType};
+}
+
 void RadioModule::configureRadio()
 {
+    std::cout << "Configuring radio" << std::endl; // Does nothing right now
 //    setParameter(XBee::AtCommand::ApiOptions, 0x02);
 //    setParameterRemote(, XBee::AtCommand::PowerLevel, 0x02);
 }
 
-RadioModule::RadioModule(int baudRate, const QSerialPortInfo &portInfo) : XBeeDevice()
+RadioModule::RadioModule(int baudRate, DataLogger *logger, const QSerialPortInfo &portInfo) : XBeeDevice()
 {
-    webServer = new WebServer(8001);
+    dataLogger = logger;
 
-    serialPort = new SerialPort(portInfo, 921600, &webServer->dataLogger,
+    serialPort = new SerialPort(portInfo, baudRate, dataLogger,
                                 XBee::ApiOptions::ApiWithoutEscapes);
 
     sendTransmitRequestsImmediately = true;
@@ -61,9 +92,11 @@ RadioModule::RadioModule(int baudRate, const QSerialPortInfo &portInfo) : XBeeDe
     sendFramesImmediately = true;
 
     logWrongChecksums = false;
+
+    configureRadio();
 }
 
-RadioModule::RadioModule(int baudRate) : XBeeDevice()
+RadioModule::RadioModule(int baudRate, DataLogger *logger) : XBeeDevice()
 {
     QSerialPortInfo targetPort = getTargetPort();
 
@@ -75,7 +108,7 @@ RadioModule::RadioModule(int baudRate) : XBeeDevice()
     }
 #endif
 
-    *this = RadioModule(baudRate, targetPort);
+    *this = RadioModule(baudRate, logger, targetPort);
 }
 
 void RadioModule::start()
@@ -93,13 +126,13 @@ void RadioModule::writeBytes(const char *data, size_t length_bytes)
 #endif
     int bytes_written = serialPort->write(data, (int) length_bytes);
 
-    webServer->dataLogger.writeToTextFile("Writing: ");
+    dataLogger->writeToTextFile("Writing: ");
     for (int i = 0; i < length_bytes; i++)
     {
-        webServer->dataLogger.writeToTextFile(QString::asprintf("%02x ", data[i] & 0xFF));
+        dataLogger->writeToTextFile(QString::asprintf("%02x ", data[i] & 0xFF));
     }
-    webServer->dataLogger.writeToTextFile("\n");
-    webServer->dataLogger.flushTextFile();
+    dataLogger->writeToTextFile("\n");
+    dataLogger->flushTextFile();
 
 
     if (bytes_written != length_bytes)
@@ -121,13 +154,14 @@ void RadioModule::readBytes(uint8_t *buffer, size_t length_bytes)
 
 void RadioModule::handleReceivePacket(XBee::ReceivePacket::Struct *frame)
 {
-    webServer->dataReady(frame->data, frame->dataLength_bytes);
+    lastPacket = parsePacket(frame->data);
+    dataLogger->dataReady(lastPacket.data.c_str(), lastPacket.packetType);
 }
 
 void RadioModule::handleReceivePacket64Bit(XBee::ReceivePacket64Bit::Struct *frame)
 {
-//    std::cout << "RSSI: -" << std::dec << (int) (frame->negativeRssi & 0xFF) << "dbm\n";
-    webServer->dataReady(frame->data, frame->dataLength_bytes, frame->negativeRssi);
+    lastPacket = parsePacket(frame->data);
+    dataLogger->dataReady(lastPacket.data.c_str(), lastPacket.packetType, frame->negativeRssi);
 }
 
 void RadioModule::incorrectChecksum(uint8_t calculated, uint8_t received)
@@ -137,11 +171,11 @@ void RadioModule::incorrectChecksum(uint8_t calculated, uint8_t received)
 
     log(str.c_str());
 
-    webServer->dataLogger.writeToByteFile(str.c_str(), str.length());
-    webServer->dataLogger.writeToTextFile(str.c_str(), str.length());
+    dataLogger->writeToByteFile(str.c_str(), str.length());
+    dataLogger->writeToTextFile(str.c_str(), str.length());
 
-    webServer->dataLogger.flushByteFile();
-    webServer->dataLogger.flushTextFile();
+    dataLogger->flushByteFile();
+    dataLogger->flushTextFile();
 }
 
 void RadioModule::log(const char *format, ...)
@@ -156,9 +190,9 @@ void RadioModule::log(const char *format, ...)
     vsnprintf(buff, sizeof(buff), format, args);
     std::string str = buff;
 
-    webServer->dataLogger.writeToTextFile(str.c_str(), str.length());
+    dataLogger->writeToTextFile(str.c_str(), str.length());
 
-    webServer->dataLogger.flushTextFile();
+    dataLogger->flushTextFile();
 
     va_end(args);
 }
@@ -210,5 +244,29 @@ void RadioModule::_handleRemoteAtCommandResponse(const uint8_t *frame, uint8_t l
     }
 
     log("\n");
+}
+
+ServingRadioModule::ServingRadioModule(int baudRate, DataLogger *logger, const QSerialPortInfo &portInfo, WebServer *server): RadioModule(baudRate, logger, portInfo)
+{
+    webServer = server;
+}
+
+ServingRadioModule::ServingRadioModule(int baudRate, DataLogger *logger, WebServer *server): RadioModule(baudRate, logger)
+{
+    webServer = server;
+}
+
+void ServingRadioModule::handleReceivePacket64Bit(XBee::ReceivePacket64Bit::Struct *frame)
+{
+    RadioModule::handleReceivePacket64Bit(frame);
+
+    webServer->broadcast(QString::fromStdString(lastPacket.data));
+}
+
+void ServingRadioModule::handleReceivePacket(XBee::ReceivePacket::Struct *frame)
+{
+    RadioModule::handleReceivePacket(frame);
+
+    webServer->broadcast(QString::fromStdString(lastPacket.data));
 }
 

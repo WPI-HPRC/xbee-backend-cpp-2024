@@ -6,18 +6,23 @@
 #include "QDateTime"
 #include "Constants.h"
 #include <QJsonDocument>
+#include <iostream>
 
-#define OFFICIAL_TEST true
+//#define OFFICIAL_TEST
 
-DataLogger::DataLogger()
+QString DataLogger::enclosingDirectory = Constants::LogDirPath;
+
+DataLogger::DataLogger(QString dirPrefix, bool needFiles)
 {
+    needtoCreateFiles = needFiles;
+    directoryPrefix = dirPrefix;
     createFiles();
 }
 
-void DataLogger::createDirectory(const QString &timeString)
+void DataLogger::createDirectory(const QString &dirName)
 {
-    logDir.setPath(Constants::LogDirPath);
-    logDir.setPath(logDir.path().append("/").append(timeString));
+    logDir.setPath(DataLogger::enclosingDirectory);
+    logDir.setPath(logDir.path().append("/").append(dirName));
 
     if (logDir.path().startsWith("~"))
     {
@@ -28,11 +33,11 @@ void DataLogger::createDirectory(const QString &timeString)
     {
         if (logDir.mkpath("."))
         {
-            qDebug("Created log directory");
+            std::cout << "Created log directory at " << logDir.path().toStdString() << std::endl;
         }
         else
         {
-            qDebug("Failed to create log directory");
+            std::cout << "Failed to create log directory at " << logDir.path().toStdString() << std::endl;
         }
     }
 #if DEBUG_CSV
@@ -49,23 +54,26 @@ void DataLogger::createFiles()
 
     QString timeString = currentTime.toString(Constants::LogTimeFormat);
 
-    createDirectory(timeString);
+    createDirectory(directoryPrefix.isEmpty() ? timeString : directoryPrefix.append("/"));
 
-#if OFFICIAL_TEST
-    rocketLogFile.open(logDir.path().append("/").append(timeString).append("_rocket.csv"));
-    payloadLogFile.open(logDir.path().append("/").append(timeString).append("_payload.csv"));
-    byteLog.setFileName(logDir.path().append("/").append(timeString).append("_bytes.txt"));
-    byteLog.open(QIODeviceBase::WriteOnly | QIODeviceBase::Text);
-    textLog.setFileName(logDir.path().append("/").append(timeString).append("_log.txt"));
-    textLog.open(QIODeviceBase::WriteOnly | QIODeviceBase::Text);
+    if (needtoCreateFiles)
+    {
+#ifndef OFFICIAL_TEST
+        rocketLogFile.open(logDir.path().append("/").append(timeString).append("_rocket.csv"));
+        payloadLogFile.open(logDir.path().append("/").append(timeString).append("_payload.csv"));
+        byteLog.setFileName(logDir.path().append("/").append(timeString).append("_bytes.txt"));
+        byteLog.open(QIODeviceBase::WriteOnly | QIODeviceBase::Text);
+        textLog.setFileName(logDir.path().append("/").append(timeString).append("_log.txt"));
+        textLog.open(QIODeviceBase::WriteOnly | QIODeviceBase::Text);
 #else
-    rocketLogFile.open(logDir.path().append("/").append(timeString).append("_rocket_NOT_OFFICIAL.csv"));
-    payloadLogFile.open(logDir.path().append("/").append(timeString).append("_payload_NOT_OFFICIAL.csv"));
-    byteLog.setFileName(logDir.path().append("/").append(timeString).append("_bytes_NOT_OFFICIAL.txt"));
-    byteLog.open(QIODeviceBase::WriteOnly | QIODeviceBase::Text);
-    textLog.setFileName(logDir.path().append("/").append(timeString).append("_log_NOT_OFFICIAL.txt"));
-    textLog.open(QIODeviceBase::WriteOnly | QIODeviceBase::Text);
+        rocketLogFile.open(logDir.path().append("/").append(timeString).append("_rocket_OFFICIAL.csv"));
+        payloadLogFile.open(logDir.path().append("/").append(timeString).append("_payload_OFFICIAL.csv"));
+        byteLog.setFileName(logDir.path().append("/").append(timeString).append("_bytes_OFFICIAL.txt"));
+        byteLog.open(QIODeviceBase::WriteOnly | QIODeviceBase::Text);
+        textLog.setFileName(logDir.path().append("/").append(timeString).append("_log_OFFICIAL.txt"));
+        textLog.open(QIODeviceBase::WriteOnly | QIODeviceBase::Text);
 #endif
+    }
 }
 
 void DataLogger::writeToByteFile(const char *text, size_t size)
@@ -85,7 +93,7 @@ void DataLogger::flushByteFile()
 
 void DataLogger::writeToTextFile(const char *text, size_t size)
 {
-    textLog.write(text, size);
+    textLog.write(text, (long long) size);
 }
 
 void DataLogger::writeToTextFile(const QString &str)

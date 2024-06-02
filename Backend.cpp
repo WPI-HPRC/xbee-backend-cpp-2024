@@ -20,7 +20,26 @@ Backend::Backend(QObject *parent) : QObject(parent)
     return;
 #else
 
-    radioModules.append(new RadioModule(115200));
+    webServer = new WebServer(8001);
+
+    QString timeString = QDateTime::currentDateTime().toString(Constants::LogTimeFormat);
+
+    dataLogger = new DataLogger("", false);
+
+    DataLogger::enclosingDirectory = dataLogger->logDir.absolutePath();
+
+    auto *rocketModule = new RadioModule(115200, new DataLogger("Rocket"));
+    rocketModule->name = "Rocket";
+
+    auto *payloadModule = new RadioModule(115200, new DataLogger("Payload"));
+    payloadModule->name = "Payload";
+
+    auto *groundModule = new ServingRadioModule(921600, new DataLogger("Ground_Station"), webServer);
+    groundModule->name = "Ground_Station";
+
+    radioModules.append(rocketModule);
+    radioModules.append(payloadModule);
+    radioModules.append(groundModule);
 
     timer = new QTimer();
     timer->setInterval(5);

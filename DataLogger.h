@@ -8,6 +8,7 @@
 #include "QFile"
 #include "QJsonObject"
 #include "QDir"
+#include "Constants.h"
 
 #define DEBUG_CSV false
 
@@ -110,12 +111,25 @@ private:
 class DataLogger
 {
 public:
-    DataLogger();
+    static QString enclosingDirectory;
+
+    DataLogger(QString dirPrefix = "", bool needFiles = true);
+
+    QDir logDir;
+
+    QString directoryPrefix;
 
     enum PacketType
     {
-        Rocket,
-        Payload
+        Unknown = -1,
+        Rocket = 0x01,
+        Payload = 0x02
+    };
+
+    struct Packet
+    {
+        std::string data;
+        PacketType packetType;
     };
 
     void writeData(const QJsonObject &jsonData, PacketType packetType);
@@ -137,15 +151,15 @@ public:
     void flushTextFile();
 
 private:
+    bool needtoCreateFiles;
+
     CSVWriter rocketLogFile;
     CSVWriter payloadLogFile;
 
     QFile byteLog;
     QFile textLog;
 
-    QDir logDir;
-
-    void createDirectory(const QString &timeString);
+    void createDirectory(const QString &dirName);
 
     void createFiles();
 

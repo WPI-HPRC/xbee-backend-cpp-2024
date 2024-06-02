@@ -101,62 +101,6 @@ void WebServer::clientStateChanged(WebSocket *socket, const QAbstractSocket::Soc
     }
 }
 
-void WebServer::dataReady(const uint8_t *data, size_t length_bytes)
-{
-    std::string json;
-    DataLogger::PacketType packetType;
-    if (data[0] == 0x01) // Rocket packet
-    {
-        json = JS::serializeStruct(*(RocketTelemPacket *) (&data[1]));
-        packetType = DataLogger::Rocket;
-    }
-    else if (data[0] == 0x02) // Payload packet
-    {
-        json = JS::serializeStruct(*(PayloadTelemPacket *) (&data[1]));
-        packetType = DataLogger::Payload;
-    }
-    else
-    {
-//        qDebug() << "Unrecognized: " << Qt::hex << (int) (data[0] & 0xFF);
-        return;
-    }
-
-
-    json = std::regex_replace(json, std::regex("nan"), "0");
-    json = std::regex_replace(json, std::regex("inf"), "0");
-
-    dataLogger.dataReady(json.c_str(), packetType);
-
-    broadcast(json.c_str());
-}
-
-void WebServer::dataReady(const uint8_t *data, size_t length_bytes, uint8_t rssi)
-{
-    DataLogger::PacketType packetType;
-    std::string json;
-    if (data[0] == 0x01) // Rocket packet
-    {
-        json = JS::serializeStruct(*(RocketTelemPacket *) (&data[1]));
-        packetType = DataLogger::Rocket;
-    }
-    else if (data[0] == 0x02) // Payload packet
-    {
-        json = JS::serializeStruct(*(PayloadTelemPacket *) (&data[1]));
-        packetType = DataLogger::Payload;
-    }
-    else
-    {
-        qDebug() << "Unrecognized: " << Qt::hex << (int) (data[0] & 0xFF);
-        return;
-    }
-
-    json = std::regex_replace(json, std::regex("nan"), "0");
-    json = std::regex_replace(json, std::regex("inf"), "0");
-    dataLogger.dataReady(json.c_str(), packetType, rssi);
-
-    broadcast(json.c_str());
-}
-
 void WebServer::broadcast(const QString &str)
 {
     serverSocket->m_socket->sendTextMessage(str);

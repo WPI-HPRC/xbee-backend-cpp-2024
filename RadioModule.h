@@ -14,13 +14,17 @@
 class RadioModule : public XBeeDevice
 {
 public:
-    RadioModule(int baudRate, const QSerialPortInfo &portInfo);
+    RadioModule(int baudRate, DataLogger *logger, const QSerialPortInfo &portInfo);
 
-    RadioModule(int baudRate);
+    RadioModule(int baudRate, DataLogger *logger);
 
-    WebServer *webServer;
+    DataLogger *dataLogger;
 
     SerialPort *serialPort;
+
+    QString name;
+
+    DataLogger::Packet lastPacket;
 
     void configureRadio();
 
@@ -47,9 +51,22 @@ public:
 
     unsigned int cycleCount = 0;
 
-    uint64_t avBayAddr = 0x0013a200422cdf59;
-
     RocketTelemPacket dummyPacket;
+};
+
+class ServingRadioModule
+        : public RadioModule // (slaying because this class sends data through the web server so it is serving content so it is serving and if it's serving then it's also slaying)
+{
+public:
+    WebServer *webServer;
+
+    ServingRadioModule(int baudRate, DataLogger *logger, const QSerialPortInfo &portInfo, WebServer *server);
+
+    ServingRadioModule(int baudRate, DataLogger *logger, WebServer *server);
+
+    void handleReceivePacket(XBee::ReceivePacket::Struct *frame) override;
+
+    void handleReceivePacket64Bit(XBee::ReceivePacket64Bit::Struct *frame) override;
 };
 
 

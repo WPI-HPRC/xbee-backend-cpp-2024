@@ -8,7 +8,7 @@
 #include <QJsonDocument>
 #include <iostream>
 
-#define OFFICIAL_TEST
+//#define OFFICIAL_TEST
 
 QString DataLogger::enclosingDirectory = Constants::LogDirPath;
 
@@ -115,17 +115,19 @@ void DataLogger::flushDataFiles()
 
 void DataLogger::writeData(const QJsonObject &jsonData, DataLogger::PacketType packetType)
 {
+    return;
     switch (packetType)
     {
         case Rocket:
             rocketLogFile.write(jsonData);
-            return;
+            break;
         case Payload:
             payloadLogFile.write(jsonData);
-            return;
+            break;
         default:
             return;
     }
+//    flushDataFiles();
 }
 
 void DataLogger::dataReady(const char *data, DataLogger::PacketType packetType)

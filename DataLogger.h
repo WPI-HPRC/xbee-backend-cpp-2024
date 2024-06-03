@@ -8,9 +8,10 @@
 #include "QFile"
 #include "QJsonObject"
 #include "QDir"
+#include <iostream>
 #include "Constants.h"
 
-#define DEBUG_CSV false
+#define DEBUG_CSV true
 
 class CSVWriter
 {

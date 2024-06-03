@@ -13,6 +13,7 @@
 
 //#define DEBUG_SERIAL
 //#define REQUIRE_XBEE_MODULE
+#define REQUIRE_XBEE_MODULE
 #define SERIAL_PORT_READ_BUF_SIZE 65536
 
 class SerialPort : public QObject

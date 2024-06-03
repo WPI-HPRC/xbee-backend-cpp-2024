@@ -91,7 +91,7 @@ RadioModule::RadioModule(int baudRate, DataLogger *logger, const QSerialPortInfo
 
     sendFramesImmediately = true;
 
-    logWrongChecksums = false;
+    logWrongChecksums = true;
 
     configureRadio();
 }
@@ -156,6 +156,7 @@ void RadioModule::readBytes(uint8_t *buffer, size_t length_bytes)
 
 void RadioModule::handleReceivePacket(XBee::ReceivePacket::Struct *frame)
 {
+    std::cout << "Received packet" << std::endl;
     lastPacket = parsePacket(frame->data);
     dataLogger->dataReady(lastPacket.data.c_str(), lastPacket.packetType);
 }
@@ -263,14 +264,14 @@ void ServingRadioModule::handleReceivePacket64Bit(XBee::ReceivePacket64Bit::Stru
     log("RSSI: -%ddbm\n", frame->negativeRssi);
     RadioModule::handleReceivePacket64Bit(frame);
 
-    webServer->broadcast(QString::fromStdString(lastPacket.data));
+//    webServer->broadcast(QString::fromStdString(lastPacket.data));
 }
 
 void ServingRadioModule::handleReceivePacket(XBee::ReceivePacket::Struct *frame)
 {
     RadioModule::handleReceivePacket(frame);
 
-    webServer->broadcast(QString::fromStdString(lastPacket.data));
+//    webServer->broadcast(QString::fromStdString(lastPacket.data));
 }
 
 void RocketTestModule::didCycle()

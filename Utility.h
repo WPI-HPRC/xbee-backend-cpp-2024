@@ -7,9 +7,202 @@
 
 #include "json_struct.h"
 
+#define GROUND_STATION_ADDR 0x0013A200423F474C
+
 #pragma pack(push, 1)
+struct RocketTxPacket
+{
+    uint8_t packetType = 0x01;
+    // State Integer
+    // 0 - PreLaunch
+    // 1 - Launch
+    // 2 - Coast
+    // 3 - DrogueDescent
+    // 4 - MainDescent
+    // 5 - Recovery
+    // 6 - Abort
+    uint8_t state = 0;
+    // Raw Sensor Readings
+    float accelX = 0.0f;
+    float accelY = 0.0f;
+    float accelZ = 0.0f;
+    float gyroX = 0.0f;
+    float gyroY = 0.0f;
+    float gyroZ = 0.0f;
+    float rawMagX = 0.0f;
+    float rawMagY = 0.0f;
+    float rawMagZ = 0.0f;
+    float pressure = 0.0f;
+
+    uint32_t servoPosition = 0;
+
+    // Calculated Values
+    float altitude = 0.0f;
+    float magX = 0.0f;
+    float magY = 0.0f;
+    float magZ = 0.0f;
+
+    // EKF Results
+    float w = 0.0f; // Quaternion State
+    float i = 0.0f;
+    float j = 0.0f;
+    float k = 0.0f;
+    float posX = 0.0f; // Position State ECEF
+    float posY = 0.0f;
+    float posZ = 0.0f;
+    float velX = 0.0f; // Velocity State ECEF
+    float velY = 0.0f;
+    float velZ = 0.0f;
+
+    // GPS Inputs
+    float gpsLat = 0.0f;
+    float gpsLong = 0.0f;
+    float gpsAltMSL = 0.0f;
+    float gpsAltAGL = 0.0f;
+    uint32_t epochTime = 0;
+    uint8_t satellites = 0;
+    bool gpsLock = false;
+
+    uint32_t loopCount = 0;
+    uint32_t timestamp = 0;
+
+    JS_OBJ(
+            state,
+            accelX,
+            accelY,
+            accelZ,
+            gyroX,
+            gyroY,
+            gyroZ,
+            rawMagX,
+            rawMagY,
+            rawMagZ,
+            pressure,
+            servoPosition,
+            altitude,
+            magX,
+            magY,
+            magZ,
+            w,
+            i,
+            j,
+            k,
+            posX,
+            posY,
+            posZ,
+            velX,
+            velY,
+            velZ,
+            gpsLat,
+            gpsLong,
+            gpsAltMSL,
+            gpsAltAGL,
+            epochTime,
+            satellites,
+            gpsLock,
+            loopCount,
+            timestamp
+    );
+};
+
 struct RocketTelemPacket
 {
+    // State Integer
+    // 0 - PreLaunch
+    // 1 - Launch
+    // 2 - Coast
+    // 3 - DrogueDescent
+    // 4 - MainDescent
+    // 5 - Recovery
+    // 6 - Abort
+    uint8_t state = 0;
+    // Raw Sensor Readings
+    float accelX = 0.0f;
+    float accelY = 0.0f;
+    float accelZ = 0.0f;
+    float gyroX = 0.0f;
+    float gyroY = 0.0f;
+    float gyroZ = 0.0f;
+    float rawMagX = 0.0f;
+    float rawMagY = 0.0f;
+    float rawMagZ = 0.0f;
+    float pressure = 0.0f;
+
+    uint32_t servoPosition = 0;
+
+    // Calculated Values
+    float altitude = 0.0f;
+    float magX = 0.0f;
+    float magY = 0.0f;
+    float magZ = 0.0f;
+
+    // EKF Results
+    float w = 0.0f; // Quaternion State
+    float i = 0.0f;
+    float j = 0.0f;
+    float k = 0.0f;
+    float posX = 0.0f; // Position State ECEF
+    float posY = 0.0f;
+    float posZ = 0.0f;
+    float velX = 0.0f; // Velocity State ECEF
+    float velY = 0.0f;
+    float velZ = 0.0f;
+
+    // GPS Inputs
+    float gpsLat = 0.0f;
+    float gpsLong = 0.0f;
+    float gpsAltMSL = 0.0f;
+    float gpsAltAGL = 0.0f;
+    uint32_t epochTime = 0;
+    uint8_t satellites = 0;
+    bool gpsLock = false;
+
+    uint32_t loopCount = 0;
+    uint32_t timestamp = 0;
+
+    JS_OBJ(
+            state,
+            accelX,
+            accelY,
+            accelZ,
+            gyroX,
+            gyroY,
+            gyroZ,
+            rawMagX,
+            rawMagY,
+            rawMagZ,
+            pressure,
+            servoPosition,
+            altitude,
+            magX,
+            magY,
+            magZ,
+            w,
+            i,
+            j,
+            k,
+            posX,
+            posY,
+            posZ,
+            velX,
+            velY,
+            velZ,
+            gpsLat,
+            gpsLong,
+            gpsAltMSL,
+            gpsAltAGL,
+            epochTime,
+            satellites,
+            gpsLock,
+            loopCount,
+            timestamp
+    );
+};
+
+
+struct PayloadTxPacket
+{
+    uint8_t packetType = 0x02;
     // State Integer
     // 0 - PreLaunch
     // 1 - Launch
@@ -113,89 +306,90 @@ struct PayloadTelemPacket
     // 4 - MainDescent
     // 5 - Recovery
     // 6 - Abort
-    uint8_t state = 0;
+    uint8_t p_state = 0;
     // Raw Sensor Readings
-    float accelX = 0.0f;
-    float accelY = 0.0f;
-    float accelZ = 0.0f;
-    float gyroX = 0.0f;
-    float gyroY = 0.0f;
-    float gyroZ = 0.0f;
-    float rawMagX = 0.0f;
-    float rawMagY = 0.0f;
-    float rawMagZ = 0.0f;
-    float pressure = 0.0f;
+    float p_accelX = 0.0f;
+    float p_accelY = 0.0f;
+    float p_accelZ = 0.0f;
+    float p_gyroX = 0.0f;
+    float p_gyroY = 0.0f;
+    float p_gyroZ = 0.0f;
+    float p_rawMagX = 0.0f;
+    float p_rawMagY = 0.0f;
+    float p_rawMagZ = 0.0f;
+    float p_pressure = 0.0f;
 
-    uint32_t servoPosition = 0;
+    uint32_t p_servoPosition = 0;
 
     // Calculated Values
-    float altitude = 0.0f;
-    float magX = 0.0f;
-    float magY = 0.0f;
-    float magZ = 0.0f;
+    float p_altitude = 0.0f;
+    float p_magX = 0.0f;
+    float p_magY = 0.0f;
+    float p_magZ = 0.0f;
 
     // EKF Results
-    float w = 0.0f; // Quaternion State
-    float i = 0.0f;
-    float j = 0.0f;
-    float k = 0.0f;
-    float posX = 0.0f; // Position State ECEF
-    float posY = 0.0f;
-    float posZ = 0.0f;
-    float velX = 0.0f; // Velocity State ECEF
-    float velY = 0.0f;
-    float velZ = 0.0f;
+    float p_w = 0.0f; // Quaternion State
+    float p_i = 0.0f;
+    float p_j = 0.0f;
+    float p_k = 0.0f;
+    float p_posX = 0.0f; // Position State ECEF
+    float p_posY = 0.0f;
+    float p_posZ = 0.0f;
+    float p_velX = 0.0f; // Velocity State ECEF
+    float p_velY = 0.0f;
+    float p_velZ = 0.0f;
 
     // GPS Inputs
-    float gpsLat = 0.0f;
-    float gpsLong = 0.0f;
-    float gpsAltMSL = 0.0f;
-    float gpsAltAGL = 0.0f;
-    uint32_t epochTime = 0;
-    uint8_t satellites = 0;
-    bool gpsLock = false;
+    float p_gpsLat = 0.0f;
+    float p_gpsLong = 0.0f;
+    float p_gpsAltMSL = 0.0f;
+    float p_gpsAltAGL = 0.0f;
+    uint32_t p_epochTime = 0;
+    uint8_t p_satellites = 0;
+    bool p_gpsLock = false;
 
-    uint32_t loopCount = 0;
-    uint32_t timestamp = 0;
+    uint32_t p_loopCount = 0;
+    uint32_t p_timestamp = 0;
 
     JS_OBJ(
-            state,
-            accelX,
-            accelY,
-            accelZ,
-            gyroX,
-            gyroY,
-            gyroZ,
-            rawMagX,
-            rawMagY,
-            rawMagZ,
-            pressure,
-            servoPosition,
-            altitude,
-            magX,
-            magY,
-            magZ,
-            w,
-            i,
-            j,
-            k,
-            posX,
-            posY,
-            posZ,
-            velX,
-            velY,
-            velZ,
-            gpsLat,
-            gpsLong,
-            gpsAltMSL,
-            gpsAltAGL,
-            epochTime,
-            satellites,
-            gpsLock,
-            loopCount,
-            timestamp
+            p_state,
+            p_accelX,
+            p_accelY,
+            p_accelZ,
+            p_gyroX,
+            p_gyroY,
+            p_gyroZ,
+            p_rawMagX,
+            p_rawMagY,
+            p_rawMagZ,
+            p_pressure,
+            p_servoPosition,
+            p_altitude,
+            p_magX,
+            p_magY,
+            p_magZ,
+            p_w,
+            p_i,
+            p_j,
+            p_k,
+            p_posX,
+            p_posY,
+            p_posZ,
+            p_velX,
+            p_velY,
+            p_velZ,
+            p_gpsLat,
+            p_gpsLong,
+            p_gpsAltMSL,
+            p_gpsAltAGL,
+            p_epochTime,
+            p_satellites,
+            p_gpsLock,
+            p_loopCount,
+            p_timestamp
     );
 };
+#pragma pack(pop)
 
 //struct PayloadTelemPacket
 //{
@@ -328,7 +522,6 @@ struct PayloadTelemPacket
 //            p_loopCount
 //    );
 //};
-#pragma pack(pop)
 
 #endif //XBEE_BACKEND_CPP_UTILITY_H
 

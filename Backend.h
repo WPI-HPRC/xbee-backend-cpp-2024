@@ -17,13 +17,16 @@ class Backend : public QObject
 {
 public:
     explicit Backend(QObject *parent = nullptr);
+    QList<RadioModule *> radioModules;
+    int loopCount;
+
+    void flushFiles();
 
 private:
     WebServer *webServer;
     DataSimulator *dataSimulator;
     DataLogger *dataLogger;
 
-    QList<RadioModule *> radioModules;
     QTimer *timer;
 
 };

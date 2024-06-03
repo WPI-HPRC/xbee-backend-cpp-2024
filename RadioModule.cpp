@@ -118,6 +118,8 @@ void RadioModule::start()
 
 void RadioModule::writeBytes(const char *data, size_t length_bytes)
 {
+    if (length_bytes < 0)
+        return;
 #ifndef REQUIRE_XBEE_MODULE
     if(!serialPort->isOpen())
     {
@@ -199,7 +201,7 @@ void RadioModule::log(const char *format, ...)
 
 void RadioModule::didCycle()
 {
-//    return;
+    return;
     if (cycleCount % 5 == 0)
     {
         dummyPacket.timestamp = cycleCount / 5;
@@ -258,6 +260,7 @@ ServingRadioModule::ServingRadioModule(int baudRate, DataLogger *logger, WebServ
 
 void ServingRadioModule::handleReceivePacket64Bit(XBee::ReceivePacket64Bit::Struct *frame)
 {
+    log("RSSI: -%ddbm\n", frame->negativeRssi);
     RadioModule::handleReceivePacket64Bit(frame);
 
     webServer->broadcast(QString::fromStdString(lastPacket.data));
@@ -269,4 +272,29 @@ void ServingRadioModule::handleReceivePacket(XBee::ReceivePacket::Struct *frame)
 
     webServer->broadcast(QString::fromStdString(lastPacket.data));
 }
+
+void RocketTestModule::didCycle()
+{
+    if (cycleCount % 5 == 0)
+    {
+        packet.timestamp = cycleCount / 5;
+        packet.epochTime = QDateTime::currentMSecsSinceEpoch();
+
+        sendTransmitRequestCommand(GROUND_STATION_ADDR, (uint8_t *)&packet, sizeof(packet));
+    }
+    cycleCount++;
+}
+
+void PayloadTestModule::didCycle()
+{
+    if (cycleCount % 5 == 0)
+    {
+        packet.timestamp = cycleCount / 5;
+        packet.epochTime = QDateTime::currentMSecsSinceEpoch();
+
+        sendTransmitRequestCommand(GROUND_STATION_ADDR, (uint8_t *)&packet, sizeof(packet));
+    }
+    cycleCount++;
+}
+
 

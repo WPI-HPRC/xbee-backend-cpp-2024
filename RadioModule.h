@@ -69,5 +69,29 @@ public:
     void handleReceivePacket64Bit(XBee::ReceivePacket64Bit::Struct *frame) override;
 };
 
+class RocketTestModule: public RadioModule
+{
+public:
+    RocketTestModule(int baudRate, DataLogger *logger, const QSerialPortInfo &portInfo): RadioModule(baudRate, logger, portInfo) {}
+
+    RocketTestModule(int baudRate, DataLogger *logger): RadioModule(baudRate, logger) {}
+
+    RocketTxPacket packet;
+
+    void didCycle() override;
+};
+
+class PayloadTestModule: public RadioModule
+{
+public:
+    PayloadTestModule(int baudRate, DataLogger *logger, const QSerialPortInfo &portInfo): RadioModule(baudRate, logger, portInfo) {}
+
+    PayloadTestModule(int baudRate, DataLogger *logger): RadioModule(baudRate, logger) {}
+
+    PayloadTxPacket packet;
+
+    void didCycle() override;
+};
+
 
 #endif //XBEE_BACKEND_CPP_RADIOMODULE_H

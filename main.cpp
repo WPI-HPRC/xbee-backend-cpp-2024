@@ -7,6 +7,9 @@ int main(int argc, char *argv[])
     QCoreApplication a(argc, argv);
 
     Backend backend;
-    
-    return QCoreApplication::exec();
+
+    int code = QCoreApplication::exec();
+
+    backend.flushFiles();
+    return code;
 }

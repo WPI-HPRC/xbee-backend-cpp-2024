@@ -150,6 +150,8 @@ public:
 
     void flushTextFile();
 
+    void flushDataFiles();
+
 private:
     bool needtoCreateFiles;
 

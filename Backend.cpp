@@ -6,9 +6,52 @@
 #include "DataSimulator.h"
 #include <iostream>
 
-#define DEBUG_SERIAL false
-
 #define SIMULATE_DATA false
+
+QSerialPortInfo getTargetPort(QString portName)
+{
+    QList serialPorts = QSerialPortInfo::availablePorts();
+
+    QSerialPortInfo targetPort;
+
+#ifdef DEBUG_SERIAL
+    std::cout << "Available baud rates: \n";
+    for (auto &baudRate: QSerialPortInfo::standardBaudRates())
+    {
+        std::cout << "\t" << baudRate << "\n";
+    }
+
+    std::cout << "\nFound serial ports: \n";
+#endif
+
+    for (auto &port: serialPorts)
+    {
+#ifdef DEBUG_SERIAL
+        std::cout << "\n" << port.portName().toStdString() << "\n";
+        std::cout << "\tManufacturer: " << port.manufacturer().toStdString() << "\n";
+        std::cout << "\tSystem location: " << port.systemLocation().toStdString() << "\n";
+        std::cout << "\tSerial number: " << port.serialNumber().toStdString() << "\n";
+        std::cout.flush();
+#endif
+
+        if (port.portName().contains(portName))
+        {
+            targetPort = port;
+        }
+    }
+
+    return targetPort;
+}
+
+void Backend::flushFiles()
+{
+    for (RadioModule *radioModule : this->radioModules)
+    {
+        radioModule->dataLogger->flushDataFiles();
+        radioModule->dataLogger->flushByteFile();
+        radioModule->dataLogger->flushTextFile();
+    }
+}
 
 Backend::Backend(QObject *parent) : QObject(parent)
 {
@@ -16,7 +59,7 @@ Backend::Backend(QObject *parent) : QObject(parent)
     webServer = new WebServer(8001);
 
     dataSimulator = new DataSimulator(
-            "/Users/will/Documents/GitHub/HPRC/telemetry-server/logs/2024-02-24_18.02.19_telemetry.csv", 25, webServer);
+                "/Users/will/Documents/GitHub/HPRC/telemetry-server/logs/2024-02-24_18.02.19_telemetry.csv", 25, webServer);
     return;
 #else
 
@@ -28,28 +71,34 @@ Backend::Backend(QObject *parent) : QObject(parent)
 
     DataLogger::enclosingDirectory = dataLogger->logDir.absolutePath();
 
-    auto *rocketModule = new RadioModule(115200, new DataLogger("Rocket"));
+
+
+    auto *rocketModule = new RocketTestModule(921600, new DataLogger("Rocket"), getTargetPort("COM6"));
     rocketModule->name = "Rocket";
-
-    auto *payloadModule = new RadioModule(115200, new DataLogger("Payload"));
-    payloadModule->name = "Payload";
-
-    auto *groundModule = new ServingRadioModule(921600, new DataLogger("Ground_Station"), webServer);
-    groundModule->name = "Ground_Station";
-
     radioModules.append(rocketModule);
+
+
+    auto *payloadModule = new PayloadTestModule(921600, new DataLogger("Payload"), getTargetPort("COM7"));
+    payloadModule->name = "Payload";
     radioModules.append(payloadModule);
+
+    auto *groundModule = new ServingRadioModule(921600, new DataLogger("Ground_Station"), getTargetPort("COM5"), webServer);
+    groundModule->name = "Ground_Station";
     radioModules.append(groundModule);
 
     timer = new QTimer();
     timer->setInterval(5);
+
+    loopCount = 0;
+
     connect(timer, &QTimer::timeout, [this]()
-            {
-                for (auto radioModule: this->radioModules)
-                {
-                    radioModule->doCycle();
-                }
-            }
+    {
+        this->loopCount++;
+        for (auto radioModule: this->radioModules)
+        {
+            radioModule->doCycle();
+        }
+    }
     );
     timer->start();
 #endif

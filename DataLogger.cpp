@@ -56,24 +56,38 @@ void DataLogger::createFiles()
 
     createDirectory(directoryPrefix.isEmpty() ? timeString : directoryPrefix.append("/"));
 
+    QString basePath = logDir.path().append("/").append(timeString);
+
     if (needtoCreateFiles)
     {
 #ifndef OFFICIAL_TEST
-        rocketLogFile.open(logDir.path().append("/").append(timeString).append("_rocket.csv"));
-        payloadLogFile.open(logDir.path().append("/").append(timeString).append("_payload.csv"));
-        byteLog.setFileName(logDir.path().append("/").append(timeString).append("_bytes.txt"));
+        rocketLogFile.open(basePath.append("_rocket.csv"));
+        payloadLogFile.open(basePath.append("_payload.csv"));
+        transmitStatusLog.open(basePath.append("_transmit_status.csv"));
+
+        byteLog.setFileName(basePath.append("_bytes.txt"));
         byteLog.open(QIODeviceBase::WriteOnly | QIODeviceBase::Text);
-        textLog.setFileName(logDir.path().append("/").append(timeString).append("_log.txt"));
+
+        textLog.setFileName(basePath.append("_log.txt"));
         textLog.open(QIODeviceBase::WriteOnly | QIODeviceBase::Text);
 #else
-        rocketLogFile.open(logDir.path().append("/").append(timeString).append("_rocket_OFFICIAL.csv"));
-        payloadLogFile.open(logDir.path().append("/").append(timeString).append("_payload_OFFICIAL.csv"));
-        byteLog.setFileName(logDir.path().append("/").append(timeString).append("_bytes_OFFICIAL.txt"));
+        rocketLogFile.open(basePath.append("_rocket_OFFICIAL.csv"));
+        payloadLogFile.open(basePath.append("_payload_OFFICIAL.csv"));
+        transmitStatusLog.open(basePath.append("_transmit_status_OFFICIAL.csv"));
+
+        byteLog.setFileName(basePath.append("_bytes_OFFICIAL.txt"));
         byteLog.open(QIODeviceBase::WriteOnly | QIODeviceBase::Text);
-        textLog.setFileName(logDir.path().append("/").append(timeString).append("_log_OFFICIAL.txt"));
+
+        textLog.setFileName(basePath.append("_log_OFFICIAL.txt"));
         textLog.open(QIODeviceBase::WriteOnly | QIODeviceBase::Text);
 #endif
     }
+
+}
+
+void DataLogger::logTransmitStatus(const QJsonObject &jsonData)
+{
+    transmitStatusLog.write(jsonData);
 }
 
 void DataLogger::writeToByteFile(const char *text, size_t size)
@@ -115,7 +129,6 @@ void DataLogger::flushDataFiles()
 
 void DataLogger::writeData(const QJsonObject &jsonData, DataLogger::PacketType packetType)
 {
-    return;
     switch (packetType)
     {
         case Rocket:

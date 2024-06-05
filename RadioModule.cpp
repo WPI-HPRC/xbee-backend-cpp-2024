@@ -156,7 +156,6 @@ void RadioModule::readBytes(uint8_t *buffer, size_t length_bytes)
 
 void RadioModule::handleReceivePacket(XBee::ReceivePacket::Struct *frame)
 {
-    std::cout << "Received packet" << std::endl;
     lastPacket = parsePacket(frame->data);
     dataLogger->dataReady(lastPacket.data.c_str(), lastPacket.packetType);
 }
@@ -198,6 +197,23 @@ void RadioModule::log(const char *format, ...)
     dataLogger->flushTextFile();
 
     va_end(args);
+}
+
+void RadioModule::handleExtendedTransmitStatus(const uint8_t *frame, uint8_t length_bytes)
+{
+    using namespace XBee::ExtendedTransmitStatus;
+
+    auto *status = (Struct *)(&frame[BytesBeforeFrameID]);
+
+    QJsonObject json;
+    json.insert("FrameID", status->frameID);
+    json.insert("RetryCount", status->retryCount);
+    json.insert("DeliveryStatus", status->deliveryStatus);
+    json.insert("Discovery", status->discovery);
+
+    log("Transmit status for frame ID %03x: %02x", status->frameID, status->deliveryStatus);
+
+    dataLogger->logTransmitStatus(json);
 }
 
 void RadioModule::didCycle()

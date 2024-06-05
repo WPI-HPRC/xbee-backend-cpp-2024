@@ -46,7 +46,7 @@ QSerialPortInfo getTargetPort(QString portName)
 
 void Backend::flushFiles()
 {
-    for (RadioModule *radioModule : this->radioModules)
+    for (RadioModule *radioModule: this->radioModules)
     {
         radioModule->dataLogger->flushDataFiles();
         radioModule->dataLogger->flushByteFile();
@@ -83,12 +83,12 @@ Backend::Backend(QObject *parent) : QObject(parent)
     radioModules.append(payloadModule);
 */
 
-    auto *groundModule = new RadioModule(460800, dataLogger, getTargetPort("COM5"));
+    auto *groundModule = new RadioModule(921600, dataLogger);
     groundModule->name = "Ground_Station";
     radioModules.append(groundModule);
 
     timer = new QTimer();
-    timer->setInterval(20);
+    timer->setInterval(5);
 
     loopCount = 0;
 

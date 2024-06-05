@@ -128,7 +128,7 @@ void SerialPort::aboutToClose()
 void SerialPort::bytesWritten(qint64 bytes)
 {
 #if DEBUG
-//    qDebug() << "Bytes written: " << bytes;
+    //    qDebug() << "Bytes written: " << bytes;
 #endif
 }
 
@@ -155,7 +155,6 @@ void SerialPort::readChannelFinished()
 
 void SerialPort::readyRead()
 {
-    std::cout << "Ready read!" << std::endl;
     qint64 bytes_transferred = m_serialPort->read(readBuffer, 256);
 
     unsigned int n = 0;

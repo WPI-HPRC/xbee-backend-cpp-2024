@@ -210,10 +210,16 @@ void RadioModule::handleExtendedTransmitStatus(const uint8_t *frame, uint8_t len
     json.insert("RetryCount", status->retryCount);
     json.insert("DeliveryStatus", status->deliveryStatus);
     json.insert("Discovery", status->discovery);
+    json.insert("CycleCount", cycleCountsFromFrameID[status->frameID]);
 
     log("Transmit status for frame ID %03x: %02x", status->frameID, status->deliveryStatus);
 
     dataLogger->logTransmitStatus(json);
+}
+
+void RadioModule::sentFrame(uint8_t frameID)
+{
+    cycleCountsFromFrameID[frameID] = cycleCount;
 }
 
 void RadioModule::didCycle()

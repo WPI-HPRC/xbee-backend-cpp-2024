@@ -26,6 +26,8 @@ public:
 
     DataLogger::Packet lastPacket;
 
+    unsigned int cycleCountsFromFrameID[255];
+
     void configureRadio();
 
     void readBytes(uint8_t *buffer, size_t length_bytes) override;
@@ -48,6 +50,8 @@ public:
     void handleTransmitStatus(const uint8_t *frame, uint8_t length_bytes) override;
 
     void handleExtendedTransmitStatus(const uint8_t *frame, uint8_t length_bytes) override;
+
+    void sentFrame(uint8_t frameID) override;
 
     void log(const char *format, ...) override;
 

@@ -224,7 +224,7 @@ void RadioModule::_handleRemoteAtCommandResponse(const uint8_t *frame, uint8_t l
 {
     uint16_t command = getRemoteAtCommand(frame);
 
-    uint64_t address = getAddress(&frame[XBee::RemoteAtCommandResponse::BytesBeforeAddress]);
+    uint64_t address = getAddressBigEndian(&frame[XBee::RemoteAtCommandResponse::BytesBeforeAddress]);
 
     log("Remote AT response from %016llx: ", (unsigned long long) address);
     if (command == XBee::AtCommand::SupplyVoltage)

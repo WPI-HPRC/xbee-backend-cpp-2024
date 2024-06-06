@@ -45,18 +45,14 @@ public:
     void incorrectChecksum(uint8_t calculated, uint8_t received) override;
 
     void
-    _handleRemoteAtCommandResponse(const uint8_t *frame, uint8_t length_bytes, bool paramWasBeingWaitedOn) override;
-
-    void handleTransmitStatus(const uint8_t *frame, uint8_t length_bytes) override;
+    _handleRemoteAtCommandResponse(const uint8_t *frame, uint8_t length_bytes) override;
 
     void handleExtendedTransmitStatus(const uint8_t *frame, uint8_t length_bytes) override;
 
     void sentFrame(uint8_t frameID) override;
 
     void log(const char *format, ...) override;
-
-    void didCycle() override;
-
+    
     unsigned int cycleCount = 0;
 
     RocketTelemPacket dummyPacket;

@@ -118,8 +118,6 @@ void RadioModule::start()
 
 void RadioModule::writeBytes(const char *data, size_t length_bytes)
 {
-    if (length_bytes < 0)
-        return;
 #ifndef REQUIRE_XBEE_MODULE
     if(!serialPort->isOpen())
     {
@@ -222,31 +220,7 @@ void RadioModule::sentFrame(uint8_t frameID)
     cycleCountsFromFrameID[frameID] = cycleCount;
 }
 
-void RadioModule::didCycle()
-{
-    return;
-    if (cycleCount % 5 == 0)
-    {
-        dummyPacket.timestamp = cycleCount / 5;
-        sendTransmitRequestCommand(0x0013A200423F474C, (uint8_t *) &dummyPacket, sizeof(dummyPacket));
-
-//        std::string str = "Hello, World!Hello, World!Hello, World!Hello, World!Hello, World!Hello, World!Hello, World!Hello, World!Hello, World!Hello, World!";
-//        queryParameter(XBee::AtCommand::Temperature);
-//        queryParameterRemote(0x0013A200422CDAC2, XBee::AtCommand::Temperature);
-//        queryParameterRemote(0x0013A200422CDAC4, XBee::AtCommand::Temperature);
-
-
-//        queryParameterRemote(0x0013A200422CDF59, XBee::AtCommand::UnicastAttemptedCount);
-//        queryParameterRemote(0x0013A200422CDF59, XBee::AtCommand::TransmissionFailureCount);
-//        queryParameterRemote(0x0013A200422CDF59, XBee::AtCommand::MacAckFailureCount);
-
-//        queryParameterRemote(0x0013A2FE643CA484, XBee::AtCommand::Temperature);
-
-    }
-    cycleCount++;
-}
-
-void RadioModule::_handleRemoteAtCommandResponse(const uint8_t *frame, uint8_t length_bytes, bool paramWasBeingWaitedOn)
+void RadioModule::_handleRemoteAtCommandResponse(const uint8_t *frame, uint8_t length_bytes)
 {
     uint16_t command = getRemoteAtCommand(frame);
 
@@ -283,7 +257,7 @@ ServingRadioModule::ServingRadioModule(int baudRate, DataLogger *logger, WebServ
 
 void ServingRadioModule::handleReceivePacket64Bit(XBee::ReceivePacket64Bit::Struct *frame)
 {
-    log("RSSI: -%ddbm\n", frame->negativeRssi);
+    log("RSSI: -%dbm\n", frame->negativeRssi);
     RadioModule::handleReceivePacket64Bit(frame);
 
 //    webServer->broadcast(QString::fromStdString(lastPacket.data));

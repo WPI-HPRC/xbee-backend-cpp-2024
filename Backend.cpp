@@ -73,18 +73,20 @@ Backend::Backend(QObject *parent) : QObject(parent)
 
 
 
-    auto *rocketModule = new RocketTestModule(921600, new DataLogger("Rocket"), getTargetPort("COM6"));
+    auto *rocketModule = new RocketTestModule(921600, new DataLogger("Rocket"), getTargetPort("ttyUSB0"));
     rocketModule->name = "Rocket";
     radioModules.append(rocketModule);
 
 
-    auto *payloadModule = new PayloadTestModule(921600, new DataLogger("Payload"), getTargetPort("COM7"));
+    auto *payloadModule = new PayloadTestModule(921600, new DataLogger("Payload"), getTargetPort("ttyUSB1"));
     payloadModule->name = "Payload";
     radioModules.append(payloadModule);
 
+    /*
     auto *groundModule = new ServingRadioModule(921600, new DataLogger("Ground_Station"), getTargetPort("COM5"), webServer);
     groundModule->name = "Ground_Station";
     radioModules.append(groundModule);
+*/
 
     timer = new QTimer();
     timer->setInterval(5);

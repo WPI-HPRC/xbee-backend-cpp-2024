@@ -6,6 +6,7 @@
 #define HPRC_XBEEDEVICE_H
 
 #include <queue>
+#include <cstdint>
 #include "../Utility.h"
 #include "XBeeUtility.h"
 #include "CircularBuffer.hpp"
@@ -76,9 +77,9 @@ private:
 
     virtual void packetRead() = 0;
 
-    virtual void _handleRemoteAtCommandResponse(const uint8_t *frame, uint8_t length_bytes, bool paramWasBeingWaitedOn);
+    virtual void _handleRemoteAtCommandResponse(const uint8_t *frame, uint8_t length_bytes);
 
-    virtual void _handleAtCommandResponse(const uint8_t *frame, uint8_t length_bytes, bool paramWasBeingWaitedOn);
+    virtual void _handleAtCommandResponse(const uint8_t *frame, uint8_t length_bytes);
 
     virtual void remoteDeviceDiscovered(XBee::RemoteDevice *device);
 
@@ -86,13 +87,15 @@ private:
 
     virtual void handleReceivePacket64Bit(XBee::ReceivePacket64Bit::Struct *frame) = 0;
 
-    void handleTransmitStatus(const uint8_t *frame, uint8_t length_bytes);
+    virtual void handleTransmitStatus(const uint8_t *frame, uint8_t length_bytes);
 
-    void handleExtendedTransmitStatus(const uint8_t *frame, uint8_t length_bytes);
+    virtual void handleExtendedTransmitStatus(const uint8_t *frame, uint8_t length_bytes);
 
     virtual void incorrectChecksum(uint8_t calculated, uint8_t received) = 0;
 
     virtual void didCycle() = 0;
+
+    virtual void sentFrame(uint8_t frameID);
 
     void parseReceivePacket(const uint8_t *frame, uint8_t length);
 
@@ -113,11 +116,15 @@ private:
 
     uint8_t currentFrameID;
 
-    CircularQueue<XBee::BasicFrame> *transmitFrameQueue;
+    CircularQueue<XBee::BasicFrame> *frameQueue;
 
     XBee::BasicFrame tempFrame{};
 
-    CircularQueue<uint16_t> *atParamConfirmationsBeingWaitedOn;
+    bool waitingOnAtCommandResponse = false;
+    bool waitingOnTransmitStatus = false;
+
+    bool sendNextFrameImmediately = false;
+    bool dontWaitOnNextFrame = false;
 
     XBee::ReceivePacket::Struct *receivePacketStruct = new XBee::ReceivePacket::Struct;
     XBee::ReceivePacket64Bit::Struct *receivePacket64BitStruct = new XBee::ReceivePacket64Bit::Struct;
@@ -126,17 +133,28 @@ private:
     char *nodeID;
     CircularBuffer *buffer;
 protected:
-    static uint16_t getRemoteAtCommand(const uint8_t *frame);
+    static uint8_t calcChecksum(const uint8_t *packet, uint8_t size_bytes);
 
     static uint8_t getFrameType(const uint8_t *packet);
 
+    static uint8_t getFrameID(const uint8_t *packet);
+
+    static uint64_t getAddressBigEndian(const uint8_t *packet, size_t *index_io);
+
+    static uint64_t getAddressBigEndian(const uint8_t *packet);
+
+    static uint64_t getAddressLittleEndian(const uint8_t *packet, size_t *index_io);
+
+    static uint64_t getAddressLittleEndian(const uint8_t *packet);
+
+    static void loadAddressBigEndian(uint8_t *packet, uint64_t address, size_t *index_io);
+
+    static void loadAddressBigEndian(uint8_t *packet, uint64_t address);
+
     static uint16_t getAtCommand(const uint8_t *frame);
 
-    static uint64_t getAddress(const uint8_t *packet, int *initialIndex);
+    static uint16_t getRemoteAtCommand(const uint8_t *frame);
 
-    static uint64_t getAddress(const uint8_t *packet);
-
-    static uint8_t calcChecksum(const uint8_t *packet, uint8_t size_bytes);
 };
 
 

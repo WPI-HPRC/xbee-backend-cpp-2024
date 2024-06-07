@@ -2,6 +2,7 @@
 // Created by William Scheirey on 3/13/24.
 //
 
+#include <qapplicationstatic.h>
 #include "Backend.h"
 #include "DataSimulator.h"
 #include <iostream>
@@ -45,7 +46,7 @@ QSerialPortInfo getTargetPort(QString portName)
 
 void Backend::flushFiles()
 {
-    for (RadioModule *radioModule : this->radioModules)
+    for (RadioModule *radioModule: this->radioModules)
     {
         radioModule->dataLogger->flushDataFiles();
         radioModule->dataLogger->flushByteFile();
@@ -59,18 +60,17 @@ Backend::Backend(QObject *parent) : QObject(parent)
     webServer = new WebServer(8001);
 
     dataSimulator = new DataSimulator(
-                "/Users/will/Documents/GitHub/HPRC/telemetry-server/logs/2024-02-24_18.02.19_telemetry.csv", 25, webServer);
+            "/Users/will/Documents/GitHub/HPRC/telemetry-server/logs/2024-02-24_18.02.19_telemetry.csv", 25, webServer);
     return;
 #else
 
-    webServer = new WebServer(8001);
+//    webServer = new WebServer(8001);
 
     QString timeString = QDateTime::currentDateTime().toString(Constants::LogTimeFormat);
 
-    dataLogger = new DataLogger("", false);
+    dataLogger = new DataLogger("");
 
-    DataLogger::enclosingDirectory = dataLogger->logDir.absolutePath();
-
+//    DataLogger::enclosingDirectory = dataLogger->logDir.absolutePath();
 
 
     auto *rocketModule = new RocketTestModule(921600, new DataLogger("Rocket"), getTargetPort("ttyUSB0"));
@@ -82,8 +82,8 @@ Backend::Backend(QObject *parent) : QObject(parent)
     payloadModule->name = "Payload";
     radioModules.append(payloadModule);
 
-    /*
-    auto *groundModule = new ServingRadioModule(921600, new DataLogger("Ground_Station"), getTargetPort("COM5"), webServer);
+/*
+    auto *groundModule = new RadioModule(921600, dataLogger);
     groundModule->name = "Ground_Station";
     radioModules.append(groundModule);
 */
@@ -94,13 +94,12 @@ Backend::Backend(QObject *parent) : QObject(parent)
     loopCount = 0;
 
     connect(timer, &QTimer::timeout, [this]()
-    {
-        this->loopCount++;
-        for (auto radioModule: this->radioModules)
-        {
-            radioModule->doCycle();
-        }
-    }
+            {
+                for (auto radioModule: this->radioModules)
+                {
+                    radioModule->doCycle();
+                }
+            }
     );
     timer->start();
 #endif

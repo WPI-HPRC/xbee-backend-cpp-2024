@@ -8,6 +8,7 @@
 #include "QFile"
 #include "QJsonObject"
 #include "QDir"
+#include <iostream>
 #include "Constants.h"
 
 #define DEBUG_CSV false
@@ -142,6 +143,8 @@ public:
 
     void writeToByteFile(const QString &str);
 
+    void logTransmitStatus(const QJsonObject &jsonData);
+
     void flushByteFile();
 
     void writeToTextFile(const char *text, size_t size);
@@ -157,6 +160,8 @@ private:
 
     CSVWriter rocketLogFile;
     CSVWriter payloadLogFile;
+
+    CSVWriter transmitStatusLog;
 
     QFile byteLog;
     QFile textLog;

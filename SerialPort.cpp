@@ -128,7 +128,7 @@ void SerialPort::aboutToClose()
 void SerialPort::bytesWritten(qint64 bytes)
 {
 #if DEBUG
-    qDebug() << "Bytes written: " << bytes;
+    //    qDebug() << "Bytes written: " << bytes;
 #endif
 }
 

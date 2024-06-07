@@ -26,6 +26,8 @@ public:
 
     DataLogger::Packet lastPacket;
 
+    unsigned int cycleCountsFromFrameID[255];
+
     void configureRadio();
 
     void readBytes(uint8_t *buffer, size_t length_bytes) override;
@@ -43,12 +45,14 @@ public:
     void incorrectChecksum(uint8_t calculated, uint8_t received) override;
 
     void
-    _handleRemoteAtCommandResponse(const uint8_t *frame, uint8_t length_bytes, bool paramWasBeingWaitedOn) override;
+    _handleRemoteAtCommandResponse(const uint8_t *frame, uint8_t length_bytes) override;
+
+    void handleExtendedTransmitStatus(const uint8_t *frame, uint8_t length_bytes) override;
+
+    void sentFrame(uint8_t frameID) override;
 
     void log(const char *format, ...) override;
-
-    void didCycle() override;
-
+    
     unsigned int cycleCount = 0;
 
     RocketTelemPacket dummyPacket;
@@ -69,24 +73,30 @@ public:
     void handleReceivePacket64Bit(XBee::ReceivePacket64Bit::Struct *frame) override;
 };
 
-class RocketTestModule: public RadioModule
+class RocketTestModule : public RadioModule
 {
 public:
-    RocketTestModule(int baudRate, DataLogger *logger, const QSerialPortInfo &portInfo): RadioModule(baudRate, logger, portInfo) {}
+    RocketTestModule(int baudRate, DataLogger *logger, const QSerialPortInfo &portInfo) : RadioModule(baudRate, logger,
+                                                                                                      portInfo)
+    {}
 
-    RocketTestModule(int baudRate, DataLogger *logger): RadioModule(baudRate, logger) {}
+    RocketTestModule(int baudRate, DataLogger *logger) : RadioModule(baudRate, logger)
+    {}
 
     RocketTxPacket packet;
 
     void didCycle() override;
 };
 
-class PayloadTestModule: public RadioModule
+class PayloadTestModule : public RadioModule
 {
 public:
-    PayloadTestModule(int baudRate, DataLogger *logger, const QSerialPortInfo &portInfo): RadioModule(baudRate, logger, portInfo) {}
+    PayloadTestModule(int baudRate, DataLogger *logger, const QSerialPortInfo &portInfo) : RadioModule(baudRate, logger,
+                                                                                                       portInfo)
+    {}
 
-    PayloadTestModule(int baudRate, DataLogger *logger): RadioModule(baudRate, logger) {}
+    PayloadTestModule(int baudRate, DataLogger *logger) : RadioModule(baudRate, logger)
+    {}
 
     PayloadTxPacket packet;
 

@@ -56,29 +56,27 @@ void DataLogger::createFiles()
 
     createDirectory(directoryPrefix.isEmpty() ? timeString : directoryPrefix.append("/"));
 
-    QString basePath = logDir.path().append("/").append(timeString);
-
     if (needtoCreateFiles)
     {
 #ifndef OFFICIAL_TEST
-        rocketLogFile.open(basePath.append("_rocket.csv"));
-        payloadLogFile.open(basePath.append("_payload.csv"));
-        transmitStatusLog.open(basePath.append("_transmit_status.csv"));
+        rocketLogFile.open(logDir.path().append("/").append(timeString).append("_rocket.csv"));
+        payloadLogFile.open(logDir.path().append("/").append(timeString).append("_payload.csv"));
+        transmitStatusLog.open(logDir.path().append("/").append(timeString).append("_transmit_status.csv"));
 
-        byteLog.setFileName(basePath.append("_bytes.txt"));
+        byteLog.setFileName(logDir.path().append("/").append(timeString).append("_bytes.txt"));
         byteLog.open(QIODeviceBase::WriteOnly | QIODeviceBase::Text);
 
-        textLog.setFileName(basePath.append("_log.txt"));
+        textLog.setFileName(logDir.path().append("/").append(timeString).append("_log.txt"));
         textLog.open(QIODeviceBase::WriteOnly | QIODeviceBase::Text);
 #else
-        rocketLogFile.open(basePath.append("_rocket_OFFICIAL.csv"));
-        payloadLogFile.open(basePath.append("_payload_OFFICIAL.csv"));
-        transmitStatusLog.open(basePath.append("_transmit_status_OFFICIAL.csv"));
+        rocketLogFile.open(logDir.path().append("/").append(timeString).append("_rocket_OFFICIAL.csv"));
+        payloadLogFile.open(logDir.path().append("/").append(timeString).append("_payload_OFFICIAL.csv"));
+        transmitStatusLog.open(logDir.path().append("/").append(timeString).append("_transmit_status_OFFICIAL.csv"));
 
-        byteLog.setFileName(basePath.append("_bytes_OFFICIAL.txt"));
+        byteLog.setFileName(logDir.path().append("/").append(timeString).append("_bytes_OFFICIAL.txt"));
         byteLog.open(QIODeviceBase::WriteOnly | QIODeviceBase::Text);
 
-        textLog.setFileName(basePath.append("_log_OFFICIAL.txt"));
+        textLog.setFileName(logDir.path().append("/").append(timeString).append("_log_OFFICIAL.txt"));
         textLog.open(QIODeviceBase::WriteOnly | QIODeviceBase::Text);
 #endif
     }
@@ -88,6 +86,7 @@ void DataLogger::createFiles()
 void DataLogger::logTransmitStatus(const QJsonObject &jsonData)
 {
     transmitStatusLog.write(jsonData);
+    transmitStatusLog.file.flush();
 }
 
 void DataLogger::writeToByteFile(const char *text, size_t size)

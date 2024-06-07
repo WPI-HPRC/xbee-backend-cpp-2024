@@ -66,11 +66,9 @@ Backend::Backend(QObject *parent) : QObject(parent)
 
 //    webServer = new WebServer(8001);
 
-    QString timeString = QDateTime::currentDateTime().toString(Constants::LogTimeFormat);
+    dataLogger = new DataLogger("", false);
 
-    dataLogger = new DataLogger("");
-
-//    DataLogger::enclosingDirectory = dataLogger->logDir.absolutePath();
+    DataLogger::enclosingDirectory = dataLogger->logDir.absolutePath();
 
 
     auto *rocketModule = new RocketTestModule(921600, new DataLogger("Rocket"), getTargetPort("ttyUSB0"));

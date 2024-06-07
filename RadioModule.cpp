@@ -197,7 +197,7 @@ void RadioModule::log(const char *format, ...)
     va_end(args);
 }
 
-void RadioModule::handleExtendedTransmitStatus(const uint8_t *frame, uint8_t length_bytes)
+void RadioModule::_handleExtendedTransmitStatus(const uint8_t *frame, uint8_t length_bytes)
 {
     using namespace XBee::ExtendedTransmitStatus;
 
@@ -210,7 +210,7 @@ void RadioModule::handleExtendedTransmitStatus(const uint8_t *frame, uint8_t len
     json.insert("Discovery", status->discovery);
     json.insert("CycleCount", (int)cycleCountsFromFrameID[status->frameID]);
 
-    log("Transmit status for frame ID %03x: %02x", status->frameID, status->deliveryStatus);
+//    log("Transmit status for frame ID %03x: %02x. RetryCount: %03x, Discovery: %02x\n", status->frameID, status->deliveryStatus, status->retryCount, status->discovery);
 
     dataLogger->logTransmitStatus(json);
 }

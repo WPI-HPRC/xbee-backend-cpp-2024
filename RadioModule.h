@@ -47,7 +47,7 @@ public:
     void
     _handleRemoteAtCommandResponse(const uint8_t *frame, uint8_t length_bytes) override;
 
-    void handleExtendedTransmitStatus(const uint8_t *frame, uint8_t length_bytes) override;
+    void _handleExtendedTransmitStatus(const uint8_t *frame, uint8_t length_bytes) override;
 
     void sentFrame(uint8_t frameID) override;
 

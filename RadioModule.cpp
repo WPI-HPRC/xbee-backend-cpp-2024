@@ -87,7 +87,7 @@ RadioModule::RadioModule(int baudRate, DataLogger *logger, const QSerialPortInfo
     serialPort = new SerialPort(portInfo, baudRate, dataLogger,
                                 XBee::ApiOptions::ApiWithoutEscapes);
 
-    sendTransmitRequestsImmediately = true;
+    sendTransmitRequestsImmediately = false;
 
     sendFramesImmediately = true;
 
@@ -272,9 +272,10 @@ void ServingRadioModule::handleReceivePacket(XBee::ReceivePacket::Struct *frame)
 
 void RocketTestModule::didCycle()
 {
-    if (cycleCount % 5 == 0)
+    constexpr int interval = 4;
+    if (cycleCount % interval == 0)
     {
-        packet.timestamp = cycleCount / 5;
+        packet.timestamp = cycleCount / interval;
         packet.epochTime = QDateTime::currentMSecsSinceEpoch();
 
         sendTransmitRequestCommand(GROUND_STATION_ADDR, (uint8_t *)&packet, sizeof(packet));
@@ -284,9 +285,10 @@ void RocketTestModule::didCycle()
 
 void PayloadTestModule::didCycle()
 {
-    if (cycleCount % 5 == 0)
+    constexpr int interval = 4;
+    if (cycleCount % interval == 0)
     {
-        packet.timestamp = cycleCount / 5;
+        packet.timestamp = cycleCount / interval;
         packet.epochTime = QDateTime::currentMSecsSinceEpoch();
 
         sendTransmitRequestCommand(GROUND_STATION_ADDR, (uint8_t *)&packet, sizeof(packet));

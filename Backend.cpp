@@ -7,7 +7,7 @@
 #include "DataSimulator.h"
 #include <iostream>
 
-#define SIMULATE_DATA false
+#define SIMULATE_DATA
 
 QSerialPortInfo getTargetPort(QString portName)
 {
@@ -56,12 +56,11 @@ void Backend::flushFiles()
 
 Backend::Backend(QObject *parent) : QObject(parent)
 {
-#if SIMULATE_DATA
+#ifdef SIMULATE_DATA
     webServer = new WebServer(8001);
 
     dataSimulator = new DataSimulator(
-            "/Users/will/Documents/GitHub/HPRC/telemetry-server/logs/2024-02-24_18.02.19_telemetry.csv", 25, webServer);
-    return;
+            "/Users/will/Documents/MATLAB/DataRates/20_20/rocket.csv", 25, webServer);
 #else
 
     webServer = new WebServer(8001);

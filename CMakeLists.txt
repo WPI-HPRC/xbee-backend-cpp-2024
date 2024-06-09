@@ -27,7 +27,6 @@ add_executable(xbee_backend_cpp main.cpp
         DataLogger.h
         Constants.h
         XBee/XBeeUtility.h
-        XBee/CircularBuffer.hpp
         RadioModule.cpp
         RadioModule.h
         SerialPort.cpp

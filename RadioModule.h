@@ -9,6 +9,8 @@
 #include "WebServer.h"
 #include "SerialPort.h"
 #include "hprcWebSocket.h"
+#include "Utility.h"
+
 #include <QTimer>
 
 class RadioModule : public XBeeDevice
@@ -52,7 +54,7 @@ public:
     void sentFrame(uint8_t frameID) override;
 
     void log(const char *format, ...) override;
-    
+
     unsigned int cycleCount = 0;
 
     RocketTelemPacket dummyPacket;

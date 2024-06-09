@@ -7,6 +7,8 @@
 
 #include "json_struct.h"
 
+#define GROUND_STATION_ADDR 0x0013A200423F474C
+
 #pragma pack(push, 1)
 
 struct RocketTelemPacket

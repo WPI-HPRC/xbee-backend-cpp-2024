@@ -64,9 +64,9 @@ Backend::Backend(QObject *parent) : QObject(parent)
     return;
 #else
 
-//    webServer = new WebServer(8001);
+    webServer = new WebServer(8001);
 
-    auto *groundModule = new RadioModule(921600, new DataLogger());
+    auto *groundModule = new ServingRadioModule(921600, new DataLogger(), webServer);
     radioModules.append(groundModule);
 
     timer = new QTimer();

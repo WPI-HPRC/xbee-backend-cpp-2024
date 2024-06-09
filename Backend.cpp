@@ -66,11 +66,11 @@ Backend::Backend(QObject *parent) : QObject(parent)
 
 //    webServer = new WebServer(8001);
 
-    dataLogger = new DataLogger("", false);
+    dataLogger = new DataLogger("");
 
     DataLogger::enclosingDirectory = dataLogger->logDir.absolutePath();
 
-
+/*
     auto *rocketModule = new RocketTestModule(921600, new DataLogger("Rocket"), getTargetPort("ttyUSB0"));
     rocketModule->name = "Rocket";
     radioModules.append(rocketModule);
@@ -79,12 +79,12 @@ Backend::Backend(QObject *parent) : QObject(parent)
     auto *payloadModule = new PayloadTestModule(921600, new DataLogger("Payload"), getTargetPort("ttyUSB1"));
     payloadModule->name = "Payload";
     radioModules.append(payloadModule);
+*/
 
-/*
     auto *groundModule = new RadioModule(921600, dataLogger);
     groundModule->name = "Ground_Station";
     radioModules.append(groundModule);
-*/
+
 
     timer = new QTimer();
     timer->setInterval(5);

@@ -7,7 +7,7 @@
 #include "DataSimulator.h"
 #include <iostream>
 
-#define SIMULATE_DATA
+//#define SIMULATE_DATA
 
 QSerialPortInfo getTargetPort(QString portName)
 {

@@ -33,6 +33,7 @@ struct RocketTelemPacket
     float rawMagY = 0.0f;
     float rawMagZ = 0.0f;
     float pressure = 0.0f;
+    float temperature = 0.0f;
 
     uint32_t servoPosition = 0;
 
@@ -59,6 +60,9 @@ struct RocketTelemPacket
     float gpsLong = 0.0f;
     float gpsAltMSL = 0.0f;
     float gpsAltAGL = 0.0f;
+    int32_t gpsVelocityN = 0;
+    int32_t gpsVelocityE = 0;
+    int32_t gpsVelocityD = 0;
     uint32_t epochTime = 0;
     uint8_t satellites = 0;
     bool gpsLock = false;
@@ -82,6 +86,7 @@ struct RocketTelemPacket
             rawMagZ,
 
             pressure,
+            temperature,
             servoPosition,
             altitude,
 
@@ -106,6 +111,10 @@ struct RocketTelemPacket
             gpsLong,
             gpsAltMSL,
             gpsAltAGL,
+            gpsVelocityN,
+            gpsVelocityE,
+            gpsVelocityD,
+
             epochTime,
             satellites,
             gpsLock,
@@ -117,7 +126,6 @@ struct RocketTelemPacket
 
 struct PayloadTelemPacket
 {
-    uint8_t p_packetType = 0x02;
     // State Integer
     // 0 - PreLaunch
     // 1 - Test

@@ -4,11 +4,12 @@
 
 #include "DataSimulator.h"
 
-DataSimulator::DataSimulator(const QString& filePath, int dataIntervalMs, WebServer *webServer, QObject *parent): dataIntervalMs(dataIntervalMs), QObject(parent)
+DataSimulator::DataSimulator(const QString &filePath, int dataIntervalMs, WebServer *webServer, QObject *parent)
+        : dataIntervalMs(dataIntervalMs), QObject(parent)
 {
     file.setFileName(filePath);
 
-    if(!file.open(QIODeviceBase::ReadOnly))
+    if (!file.open(QIODeviceBase::ReadOnly))
     {
         qDebug() << "Failed to open file: " << filePath;
     }
@@ -34,7 +35,7 @@ QList<QByteArray> DataSimulator::nextLine()
 
 void DataSimulator::sendNextLine()
 {
-    if(!file.canReadLine())
+    if (!file.canReadLine())
     {
         file.close();
         file.open(QIODeviceBase::ReadOnly);
@@ -43,9 +44,10 @@ void DataSimulator::sendNextLine()
     QString jsonString = "{";
     QList<QByteArray> values = nextLine();
 
-    for(int i = 0; i < headers.length(); i++)
+    for (int i = 0; i < headers.length(); i++)
     {
-        jsonString.append(QString::asprintf(R"("%s":"%s",)", headers[i].toStdString().c_str(), values[i].toStdString().c_str()));
+        jsonString.append(
+                QString::asprintf(R"("%s":%s,)", headers[i].toStdString().c_str(), values[i].toStdString().c_str()));
     }
     jsonString.remove(jsonString.length() - 1, 1);
     jsonString.append("}");

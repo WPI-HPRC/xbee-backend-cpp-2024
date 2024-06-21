@@ -12,11 +12,13 @@
 #include "WebServer.h"
 #include "DataSimulator.h"
 #include "DataLogger.h"
+#include "ByteParser.h"
 
 class Backend : public QObject
 {
 public:
     explicit Backend(QObject *parent = nullptr);
+
     QList<RadioModule *> radioModules;
     int loopCount;
 

@@ -131,6 +131,7 @@ void DataLogger::writeData(const QJsonObject &jsonData, DataLogger::PacketType p
     switch (packetType)
     {
         case Rocket:
+            std::cout << "Writing rocket data\n";
             rocketLogFile.write(jsonData);
             break;
         case Payload:

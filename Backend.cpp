@@ -6,8 +6,9 @@
 #include "Backend.h"
 #include "DataSimulator.h"
 #include <iostream>
+#include <QRegularExpression>
 
-#define SIMULATE_DATA
+//#define SIMULATE_DATA
 
 QSerialPortInfo getTargetPort(QString portName)
 {
@@ -64,6 +65,8 @@ Backend::Backend(QObject *parent) : QObject(parent)
             webServer);
 #else
 
+    ByteParser parser("/Users/will/Desktop/test.txt");
+
     webServer = new WebServer(8001);
 
     auto *groundModule = new ServingRadioModule(921600, new DataLogger(), webServer);
@@ -76,6 +79,7 @@ Backend::Backend(QObject *parent) : QObject(parent)
     timer->setInterval(5);
 
     loopCount = 0;
+
 
     connect(timer, &QTimer::timeout, [this]()
             {

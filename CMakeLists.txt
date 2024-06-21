@@ -34,7 +34,9 @@ add_executable(xbee_backend_cpp main.cpp
         XBee/circularQueue.hpp
         hprcWebSocket.cpp
         hprcWebSocket.h
-        Secrets.h)
+        Secrets.h
+        ByteParser.cpp
+        ByteParser.h)
 
 target_link_libraries(xbee_backend_cpp
         Qt::Core

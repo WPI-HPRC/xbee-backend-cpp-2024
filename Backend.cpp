@@ -7,7 +7,7 @@
 #include "DataSimulator.h"
 #include <iostream>
 
-//#define SIMULATE_DATA
+#define SIMULATE_DATA
 
 QSerialPortInfo getTargetPort(QString portName)
 {
@@ -60,14 +60,18 @@ Backend::Backend(QObject *parent) : QObject(parent)
     webServer = new WebServer(8001);
 
     dataSimulator = new DataSimulator(
-            "/Users/will/Documents/MATLAB/DataRates/20_20/rocket.csv", 25, webServer);
+            "/Users/will/Desktop/irec_trimmed.csv", 50,
+            webServer);
 #else
 
     webServer = new WebServer(8001);
 
     auto *groundModule = new ServingRadioModule(921600, new DataLogger(), webServer);
     radioModules.append(groundModule);
-
+/*
+    auto *testModule = new RocketTestModule(921600, new DataLogger());
+    radioModules.append(testModule);
+*/
     timer = new QTimer();
     timer->setInterval(5);
 

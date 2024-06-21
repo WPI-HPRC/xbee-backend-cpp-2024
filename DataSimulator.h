@@ -10,23 +10,29 @@
 #include <QObject>
 #include "WebServer.h"
 
-class DataSimulator: public QObject
+class DataSimulator : public QObject
 {
-    Q_OBJECT
+Q_OBJECT
 
 public:
-    DataSimulator(const QString& filePath, int dataIntervalMs, WebServer *webServer, QObject *parent = nullptr);
+    DataSimulator(const QString &filePath, int dataIntervalMs, WebServer *webServer, QObject *parent = nullptr);
 
 private:
     WebServer *_webServer;
     int dataIntervalMs;
-    QFile file;
+    QFile *file;
+
     QList<QByteArray> nextLine();
+
+    QJsonDocument parseLine(QList<QByteArray> line);
+
     QList<QByteArray> headers;
     QTimer *timer;
+    QJsonDocument nextDocument;
 
 
 public slots:
+
     void sendNextLine();
 };
 
